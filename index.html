@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edmund Bogen Team — 2026 Operating Plan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #C9A962;
+            --gold-light: #E5D4A1;
+            --gold-dark: #9A7B3D;
+            --navy: #1A2B4A;
+            --navy-light: #2D4066;
+            --navy-dark: #0F1A2E;
+            --white: #FFFFFF;
+            --off-white: #F8F7F4;
+            --gray-100: #F5F5F5;
+            --gray-200: #E8E8E8;
+            --gray-300: #D1D1D1;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --success: #059669;
+            --success-light: #D1FAE5;
+            --warning: #D97706;
+            --warning-light: #FEF3C7;
+            --danger: #DC2626;
+            --danger-light: #FEE2E2;
+            --info: #2563EB;
+            --info-light: #DBEAFE;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--off-white);
+            color: var(--navy);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 600;
+        }
+
+        /* Login Screen */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-container {
+            text-align: center;
+        }
+
+        .login-logo {
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            color: var(--gray-400);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .login-box {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--navy);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: var(--navy-dark);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-dark);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-600);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-100);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .login-error {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        /* App Layout */
+        #app {
+            display: none;
+        }
+
+        .app-header {
+            background: var(--navy);
+            color: var(--white);
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .header-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--gray-500);
+        }
+
+        .header-title {
+            font-size: 0.875rem;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            text-transform: uppercase;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Navigation */
+        .app-nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 2rem;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            color: var(--navy);
+        }
+
+        .nav-item.active {
+            color: var(--navy);
+            border-bottom-color: var(--gold);
+        }
+
+        .nav-item.hidden {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--gray-500);
+            font-size: 0.9375rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h3 {
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+        }
+
+        .metric-card.alert {
+            border-left: 4px solid var(--danger);
+            background: var(--danger-light);
+        }
+
+        .metric-card.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .metric-card.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .metric-value.positive { color: var(--success); }
+        .metric-value.negative { color: var(--danger); }
+        .metric-value.warning { color: var(--warning); }
+        .metric-value.neutral { color: var(--navy); }
+
+        .metric-subtitle {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        .metric-target {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            margin-top: 0.5rem;
+        }
+
+        /* Alerts */
+        .alert-banner {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-banner.danger {
+            background: var(--danger-light);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-banner.warning {
+            background: var(--warning-light);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .alert-banner.success {
+            background: var(--success-light);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-message {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-100);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            font-size: 0.875rem;
+        }
+
+        tr:hover {
+            background: var(--gray-100);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: var(--success-light); color: var(--success); }
+        .badge-warning { background: var(--warning-light); color: var(--warning); }
+        .badge-danger { background: var(--danger-light); color: var(--danger); }
+        .badge-info { background: var(--info-light); color: var(--info); }
+        .badge-gray { background: var(--gray-200); color: var(--gray-600); }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gold);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.success { background: var(--success); }
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.danger { background: var(--danger); }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .main-content { padding: 1rem; }
+            .app-header { padding: 0 1rem; }
+            .app-nav { padding: 0 1rem; }
+        }
+
+        /* Tab Content */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* Calculator Section */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .calculator-grid { grid-template-columns: 1fr; }
+        }
+
+        .calc-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .calc-result {
+            background: var(--navy);
+            color: var(--white);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+
+        .calc-result h4 {
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            font-size: 1.125rem;
+        }
+
+        .calc-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .calc-line:last-child {
+            border-bottom: none;
+        }
+
+        .calc-line.total {
+            font-weight: 700;
+            font-size: 1.25rem;
+            border-top: 2px solid var(--gold);
+            margin-top: 1rem;
+            padding-top: 1rem;
+        }
+
+        .calc-line .label {
+            color: var(--gray-400);
+        }
+
+        .calc-line .value {
+            font-weight: 600;
+        }
+
+        .calc-line .value.highlight {
+            color: var(--gold);
+        }
+
+        /* Pipeline Stages */
+        .pipeline-stages {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stage-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--gray-300);
+            background: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            transition: all 0.2s;
+        }
+
+        .stage-btn:hover {
+            background: var(--gray-100);
+        }
+
+        .stage-btn.active {
+            background: var(--navy);
+            color: var(--white);
+            border-color: var(--navy);
+        }
+
+        .stage-count {
+            display: inline-block;
+            background: var(--gray-200);
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+
+        .stage-btn.active .stage-count {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Forms in modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.125rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-500);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* Checklist */
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .checklist-checkbox.checked {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .checklist-text {
+            flex: 1;
+        }
+
+        .checklist-text.completed {
+            text-decoration: line-through;
+            color: var(--gray-400);
+        }
+
+        /* Print Styles */
+        @media print {
+            .app-header, .app-nav, .btn, .modal-overlay {
+                display: none !important;
+            }
+            .main-content {
+                max-width: 100%;
+                padding: 0;
+            }
+            .card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+            .page-content {
+                display: block !important;
+            }
+        }
+
+        /* Scorecard Grid */
+        .scorecard-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .scorecard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .scorecard-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
+
+        .scorecard-item input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .scorecard-label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+        }
+
+        /* Quarter targets */
+        .quarter-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .quarter-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 1rem;
+        }
+
+        .quarter-stat {
+            margin-bottom: 0.75rem;
+        }
+
+        .quarter-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .quarter-stat-label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        /* Seller cards */
+        .seller-card {
+            padding: 1rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .seller-card:hover {
+            border-color: var(--gold);
+            box-shadow: var(--shadow-md);
+        }
+
+        .seller-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .seller-name {
+            font-weight: 600;
+        }
+
+        .seller-community {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        .seller-details {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+        }
+
+        .seller-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Goals section */
+        .goal-card {
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .goal-title {
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .goal-progress {
+            margin-top: 1rem;
+        }
+
+        .goal-progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Inline edit */
+        .editable {
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .editable:hover {
+            background: var(--gray-100);
+        }
+
+        /* Print view */
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            .print-only {
+                display: block;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen">
+        <div class="login-container">
+            <div class="login-logo">Edmund Bogen</div>
+            <div class="login-subtitle">Luxury Real Estate</div>
+            <div class="login-box">
+                <h2>2026 Operating Plan</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>Team Member</label>
+                        <select id="login-user" required>
+                            <option value="">Select your name...</option>
+                            <option value="edmund">Edmund Bogen (Admin)</option>
+                            <option value="dina">Dina (Agent)</option>
+                            <option value="samantha">Samantha (Agent)</option>
+                            <option value="nicole">Nicole (Operations)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="login-password" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </form>
+                <p class="login-error" id="login-error">Invalid credentials. Please try again.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-inner">
+                <div class="header-brand">
+                    <span class="header-logo">Edmund Bogen</span>
+                    <span class="header-divider"></span>
+                    <span class="header-title">2026 Operating Plan</span>
+                </div>
+                <div class="header-user">
+                    <div class="user-info">
+                        <div class="user-name" id="current-user-name">Edmund Bogen</div>
+                        <div class="user-role" id="current-user-role">Admin</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">Sign Out</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="app-nav">
+            <div class="nav-inner">
+                <a class="nav-item active" data-page="dashboard">Dashboard</a>
+                <a class="nav-item" data-page="pipeline">Pipeline</a>
+                <a class="nav-item" data-page="calculator">Deal Calculator</a>
+                <a class="nav-item" data-page="quarter-plan">Quarter Plan</a>
+                <a class="nav-item" data-page="team-goals">Team Goals</a>
+                <a class="nav-item" data-page="ops" id="nav-ops">Ops Execution</a>
+                <a class="nav-item" data-page="settings" id="nav-settings">Settings</a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div class="page-content active" id="page-dashboard">
+                <div class="page-header">
+                    <h1>Executive Dashboard</h1>
+                    <p>60-day forecast and key performance indicators</p>
+                </div>
+
+                <!-- Stop-Loss Alerts -->
+                <div id="stop-loss-alerts"></div>
+
+                <!-- Key Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">60-Day Forecast (Net to Edmund)</div>
+                        <div class="metric-value neutral" id="metric-60day-forecast">$0</div>
+                        <div class="metric-subtitle">Probability-weighted pipeline</div>
+                        <div class="metric-target">Target: $70,000 minimum</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Active $2M+ Sellers</div>
+                        <div class="metric-value neutral" id="metric-active-sellers">0</div>
+                        <div class="metric-subtitle" id="metric-sellers-status">Target: 20-22</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Deals Closed YTD</div>
+                        <div class="metric-value neutral" id="metric-deals-ytd">0</div>
+                        <div class="metric-subtitle" id="metric-deals-target">Target: 14 total</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Net Income YTD</div>
+                        <div class="metric-value positive" id="metric-net-ytd">$0</div>
+                        <div class="metric-subtitle">Annual floor: $300,000</div>
+                    </div>
+                </div>
+
+                <!-- Floor Progress -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Annual Floor Progress</h3>
+                        <span id="floor-progress-pct">0%</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress-bar" style="height: 12px; margin-bottom: 1rem;">
+                            <div class="progress-fill" id="floor-progress-bar" style="width: 0%;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--gray-500);">
+                            <span>$0</span>
+                            <span>$300,000 Floor</span>
+                            <span>$402,000 Target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="grid-2">
+                    <!-- Upcoming Closings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Upcoming Closings (60 Days)</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Property</th>
+                                            <th>Price</th>
+                                            <th>Net</th>
+                                            <th>Prob</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="upcoming-closings-table">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; color: var(--gray-400);">No upcoming closings</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>This Week's Activity</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="scorecard-grid" style="grid-template-columns: repeat(4, 1fr);">
+                                <div class="scorecard-item">
+                                    <div class="scorecard-label">Seller Calls</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="week-seller-calls">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-400);">Target: 2</div>
+                                </div>
+                                <div class="scorecard-item">
+                                    <div class="scorecard-label">Pricing Convos</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="week-pricing-convos">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-400);">Target: 1</div>
+                                </div>
+                                <div class="scorecard-item">
+                                    <div class="scorecard-label">Listing Appts</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="week-listing-appts">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-400);">Target: 0.5</div>
+                                </div>
+                                <div class="scorecard-item">
+                                    <div class="scorecard-label">Seller Touches</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700;" id="week-seller-touches">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-400);">Target: 2.5</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline Page -->
+            <div class="page-content" id="page-pipeline">
+                <div class="page-header">
+                    <h1>Pipeline Management</h1>
+                    <p>Track active sellers and deal stages</p>
+                </div>
+
+                <!-- Pipeline Stages Filter -->
+                <div class="pipeline-stages">
+                    <button class="stage-btn active" data-stage="all">All <span class="stage-count" id="count-all">0</span></button>
+                    <button class="stage-btn" data-stage="prospect">Prospect <span class="stage-count" id="count-prospect">0</span></button>
+                    <button class="stage-btn" data-stage="active">Active <span class="stage-count" id="count-active">0</span></button>
+                    <button class="stage-btn" data-stage="listing-meeting">Listing Meeting <span class="stage-count" id="count-listing-meeting">0</span></button>
+                    <button class="stage-btn" data-stage="listed">Listed <span class="stage-count" id="count-listed">0</span></button>
+                    <button class="stage-btn" data-stage="under-contract">Under Contract <span class="stage-count" id="count-under-contract">0</span></button>
+                    <button class="stage-btn" data-stage="closed">Closed <span class="stage-count" id="count-closed">0</span></button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Sellers & Deals</h3>
+                        <button class="btn btn-primary" onclick="openAddSellerModal()">+ Add Seller</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name / Property</th>
+                                        <th>Community</th>
+                                        <th>Est. Value</th>
+                                        <th>Timing</th>
+                                        <th>Last Touch</th>
+                                        <th>Stage</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pipeline-table">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--gray-400);">No sellers in pipeline</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deal Calculator Page -->
+            <div class="page-content" id="page-calculator">
+                <div class="page-header">
+                    <h1>Deal Calculator</h1>
+                    <p>Calculate commission splits and net income per deal</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="calculator-grid">
+                            <div class="calc-inputs">
+                                <div class="form-group">
+                                    <label>Sale Price</label>
+                                    <input type="number" id="calc-price" value="2000000" placeholder="e.g., 2000000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Commission Rate (%)</label>
+                                    <input type="number" id="calc-commission" value="5.0" step="0.1" placeholder="e.g., 5.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Deal Originator</label>
+                                    <select id="calc-originator">
+                                        <option value="edmund">Edmund-Originated (60% to Edmund)</option>
+                                        <option value="agent">Agent-Originated (40% to Edmund)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Co-Broke with Agent?</label>
+                                    <select id="calc-cobroke">
+                                        <option value="yes">Yes - Split with Dina/Samantha</option>
+                                        <option value="no">No - Edmund Solo</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="calculateDeal()">Calculate</button>
+                            </div>
+
+                            <div class="calc-result">
+                                <h4>Commission Breakdown</h4>
+                                <div class="calc-line">
+                                    <span class="label">Sale Price</span>
+                                    <span class="value" id="result-price">$2,000,000</span>
+                                </div>
+                                <div class="calc-line">
+                                    <span class="label">Gross Commission (<span id="result-rate">5.0</span>%)</span>
+                                    <span class="value" id="result-gross">$100,000</span>
+                                </div>
+                                <div class="calc-line">
+                                    <span class="label">Brokerage (20% to Douglas Elliman)</span>
+                                    <span class="value" id="result-brokerage">-$20,000</span>
+                                </div>
+                                <div class="calc-line">
+                                    <span class="label">Post-Brokerage Commission</span>
+                                    <span class="value" id="result-post-brokerage">$80,000</span>
+                                </div>
+                                <div class="calc-line">
+                                    <span class="label">Edmund's Share (<span id="result-edmund-pct">60</span>%)</span>
+                                    <span class="value" id="result-edmund-share">$48,000</span>
+                                </div>
+                                <div class="calc-line">
+                                    <span class="label">Nicole Bonus</span>
+                                    <span class="value" id="result-nicole">-$1,000</span>
+                                </div>
+                                <div class="calc-line total">
+                                    <span class="label">Net to Edmund</span>
+                                    <span class="value highlight" id="result-edmund-net">$47,000</span>
+                                </div>
+                                <div class="calc-line">
+                                    <span class="label">Net to Agent</span>
+                                    <span class="value" id="result-agent-net">$32,000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Reference Table -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Quick Reference: Net to Edmund by Price Point</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Price Point</th>
+                                        <th>Gross Commission</th>
+                                        <th>Edmund-Originated (60%)</th>
+                                        <th>Agent-Originated (40%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>$1,000,000</td>
+                                        <td>$50,000</td>
+                                        <td style="color: var(--success); font-weight: 600;">$23,000</td>
+                                        <td>$15,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>$2,000,000</td>
+                                        <td>$100,000</td>
+                                        <td style="color: var(--success); font-weight: 600;">$47,000</td>
+                                        <td>$31,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>$3,000,000</td>
+                                        <td>$150,000</td>
+                                        <td style="color: var(--success); font-weight: 600;">$71,000</td>
+                                        <td>$47,000</td>
+                                    </tr>
+                                    <tr>
+                                        <td>$5,000,000</td>
+                                        <td>$250,000</td>
+                                        <td style="color: var(--success); font-weight: 600;">$119,000</td>
+                                        <td>$79,000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quarter Plan Page -->
+            <div class="page-content" id="page-quarter-plan">
+                <div class="page-header">
+                    <h1>2026 Quarter Plan</h1>
+                    <p>Quarterly targets and weekly execution cadence</p>
+                </div>
+
+                <!-- Quarterly Targets -->
+                <div class="grid-2" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 2rem;">
+                    <div class="card quarter-card">
+                        <div class="quarter-title">Q1</div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">8</div>
+                            <div class="quarter-stat-label">New $2M+ Sellers</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">18-20</div>
+                            <div class="quarter-stat-label">Active Seller Target</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">0-1</div>
+                            <div class="quarter-stat-label">Expected Closings</div>
+                        </div>
+                    </div>
+                    <div class="card quarter-card">
+                        <div class="quarter-title">Q2</div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">6</div>
+                            <div class="quarter-stat-label">New $2M+ Sellers</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">20-22</div>
+                            <div class="quarter-stat-label">Active Seller Target</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">2</div>
+                            <div class="quarter-stat-label">Expected Closings</div>
+                        </div>
+                    </div>
+                    <div class="card quarter-card">
+                        <div class="quarter-title">Q3</div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">4</div>
+                            <div class="quarter-stat-label">New $2M+ Sellers</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">18-20</div>
+                            <div class="quarter-stat-label">Active Seller Target</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">2</div>
+                            <div class="quarter-stat-label">Expected Closings</div>
+                        </div>
+                    </div>
+                    <div class="card quarter-card">
+                        <div class="quarter-title">Q4</div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">4</div>
+                            <div class="quarter-stat-label">New $2M+ Sellers</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">20+</div>
+                            <div class="quarter-stat-label">Active Seller Target</div>
+                        </div>
+                        <div class="quarter-stat">
+                            <div class="quarter-stat-value">2</div>
+                            <div class="quarter-stat-label">Expected Closings</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Cadence Checklist -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Weekly Execution Cadence</h3>
+                        <span id="week-date-range"></span>
+                    </div>
+                    <div class="card-body">
+                        <ul class="checklist" id="weekly-checklist">
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox" data-check="seller-convo-1"></div>
+                                <span class="checklist-text">Seller conversation #1 (pricing/timing explicit)</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox" data-check="seller-convo-2"></div>
+                                <span class="checklist-text">Seller conversation #2 (pricing/timing explicit)</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox" data-check="pricing-convo"></div>
+                                <span class="checklist-text">Pricing/positioning conversation (explicit numbers)</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox" data-check="pipeline-review"></div>
+                                <span class="checklist-text">Pipeline review - update all active sellers</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox" data-check="forecast-review"></div>
+                                <span class="checklist-text">60-day forecast review</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Vacation Schedule -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>2026 Time Off Schedule (6 Weeks)</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="openVacationModal()">Edit Schedule</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Period</th>
+                                        <th>Dates</th>
+                                        <th>Duration</th>
+                                        <th>Coverage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vacation-table">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: var(--gray-400);">No vacation scheduled yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Goals Page -->
+            <div class="page-content" id="page-team-goals">
+                <div class="page-header">
+                    <h1>Team Goals</h1>
+                    <p>Individual 2026 goals and weekly scorecards</p>
+                </div>
+
+                <div id="team-goals-container"></div>
+            </div>
+
+            <!-- Ops Execution Page -->
+            <div class="page-content" id="page-ops">
+                <div class="page-header">
+                    <h1>Operations Execution</h1>
+                    <p>Transaction checklists, closing calendar, and bonus tracking</p>
+                </div>
+
+                <!-- Nicole's Bonus Tracker -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="metric-card">
+                        <div class="metric-label">Deals Closed YTD</div>
+                        <div class="metric-value neutral" id="ops-deals-closed">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Nicole Bonus Earned</div>
+                        <div class="metric-value positive" id="ops-bonus-earned">$0</div>
+                        <div class="metric-subtitle">$1,000 per closed deal</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Projected Annual Bonus</div>
+                        <div class="metric-value neutral" id="ops-bonus-projected">$14,000</div>
+                        <div class="metric-subtitle">Based on 14-deal target</div>
+                    </div>
+                </div>
+
+                <!-- Closing Calendar -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Closing Calendar</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Est. Close Date</th>
+                                        <th>Property</th>
+                                        <th>Price</th>
+                                        <th>Stage</th>
+                                        <th>Checklist</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="closing-calendar-table">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: var(--gray-400);">No upcoming closings</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction Checklist Template -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Transaction Checklist Template</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="checklist">
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Listing agreement signed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Property photos scheduled/completed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">MLS listing created</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Marketing materials distributed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Offer received</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Contract executed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Escrow opened</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Inspection completed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Appraisal completed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Loan approved</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Final walkthrough scheduled</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Closing documents prepared</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Closing completed</span>
+                            </li>
+                            <li class="checklist-item">
+                                <div class="checklist-checkbox"></div>
+                                <span class="checklist-text">Commission disbursed</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page (Admin Only) -->
+            <div class="page-content" id="page-settings">
+                <div class="page-header">
+                    <h1>Plan Settings</h1>
+                    <p>Configure assumptions and team permissions</p>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Financial Assumptions -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Financial Assumptions</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Default Commission Rate (%)</label>
+                                <input type="number" id="setting-commission-rate" value="5.0" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label>Brokerage Split (% to Team)</label>
+                                <input type="number" id="setting-brokerage-split" value="80" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Edmund Share - Edmund Originated (%)</label>
+                                <input type="number" id="setting-edmund-originated" value="60" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Edmund Share - Agent Originated (%)</label>
+                                <input type="number" id="setting-agent-originated" value="40" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Nicole Bonus per Deal ($)</label>
+                                <input type="number" id="setting-nicole-bonus" value="1000" step="100">
+                            </div>
+                            <div class="form-group">
+                                <label>Monthly Floor Requirement ($)</label>
+                                <input type="number" id="setting-monthly-floor" value="25000" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label>Monthly Operating Costs ($)</label>
+                                <input type="number" id="setting-monthly-ops" value="10000" step="500">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                        </div>
+                    </div>
+
+                    <!-- Stop-Loss Rules -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Stop-Loss Rules</h3>
+                        </div>
+                        <div class="card-body">
+                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1rem;">
+                                No new projects, tools, or systems if any of these conditions are true:
+                            </p>
+                            <ul class="checklist">
+                                <li class="checklist-item">
+                                    <span class="checklist-text">Active seller count < 16</span>
+                                </li>
+                                <li class="checklist-item">
+                                    <span class="checklist-text">60-day forecast < $70,000 net</span>
+                                </li>
+                                <li class="checklist-item">
+                                    <span class="checklist-text">2 consecutive weeks without pricing conversations</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Data Management</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="exportData()">Export All Data</button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import Data</button>
+                            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                            <button class="btn btn-danger" onclick="resetData()">Reset All Data</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Seller Modal -->
+    <div class="modal-overlay" id="seller-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="seller-modal-title">Add New Seller</h3>
+                <button class="modal-close" onclick="closeModal('seller-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="seller-form">
+                    <input type="hidden" id="seller-id">
+                    <div class="form-group">
+                        <label>Seller Name</label>
+                        <input type="text" id="seller-name" required placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Property Address</label>
+                        <input type="text" id="seller-address" placeholder="e.g., 123 Main St">
+                    </div>
+                    <div class="form-group">
+                        <label>Community</label>
+                        <input type="text" id="seller-community" placeholder="e.g., Saint Andrews">
+                    </div>
+                    <div class="form-group">
+                        <label>Estimated Value ($)</label>
+                        <input type="number" id="seller-value" placeholder="e.g., 2500000">
+                    </div>
+                    <div class="form-group">
+                        <label>Timing Window</label>
+                        <select id="seller-timing">
+                            <option value="0-3">0-3 months</option>
+                            <option value="3-6">3-6 months</option>
+                            <option value="6-12">6-12 months</option>
+                            <option value="12-18">12-18 months</option>
+                            <option value="18+">18+ months</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pipeline Stage</label>
+                        <select id="seller-stage">
+                            <option value="prospect">Prospect</option>
+                            <option value="active">Active</option>
+                            <option value="listing-meeting">Listing Meeting</option>
+                            <option value="listed">Listed</option>
+                            <option value="under-contract">Under Contract</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pricing Range Discussed?</label>
+                        <input type="text" id="seller-pricing" placeholder="e.g., $2.4M - $2.6M">
+                    </div>
+                    <div class="form-group">
+                        <label>Next Action</label>
+                        <input type="text" id="seller-next-action" placeholder="e.g., Schedule listing presentation">
+                    </div>
+                    <div class="form-group">
+                        <label>Deal Originator</label>
+                        <select id="seller-originator">
+                            <option value="edmund">Edmund</option>
+                            <option value="dina">Dina</option>
+                            <option value="samantha">Samantha</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Close Probability (%)</label>
+                        <input type="number" id="seller-probability" value="50" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Estimated Close Date</label>
+                        <input type="date" id="seller-close-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="seller-notes" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('seller-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSeller()">Save Seller</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Modal -->
+    <div class="modal-overlay" id="activity-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Log Activity</h3>
+                <button class="modal-close" onclick="closeModal('activity-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="activity-form">
+                    <input type="hidden" id="activity-seller-id">
+                    <div class="form-group">
+                        <label>Activity Type</label>
+                        <select id="activity-type">
+                            <option value="seller_call">Seller Call</option>
+                            <option value="seller_meeting">Seller Meeting</option>
+                            <option value="pricing_discussion">Pricing Discussion</option>
+                            <option value="listing_appointment">Listing Appointment</option>
+                            <option value="showing">Showing</option>
+                            <option value="offer_received">Offer Received</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="activity-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="activity-notes" rows="4" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px;" placeholder="What was discussed? Any pricing mentioned?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Outcome</label>
+                        <select id="activity-outcome">
+                            <option value="positive">Positive - Moving forward</option>
+                            <option value="neutral">Neutral - No change</option>
+                            <option value="negative">Negative - Cooling off</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('activity-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveActivity()">Log Activity</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
