@@ -523,6 +523,30 @@
         .badge-info { background: var(--info-light); color: var(--info); }
         .badge-gray { background: var(--gray-200); color: var(--gray-600); }
 
+        /* Client type badges */
+        .badge-seller {
+            background: var(--info-light);
+            color: var(--info);
+            border: 1px solid var(--info);
+        }
+        .badge-buyer {
+            background: var(--success-light);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        /* Type filter button styles */
+        .type-btn.active[data-type="seller"] {
+            background: var(--info);
+            color: white;
+            border-color: var(--info);
+        }
+        .type-btn.active[data-type="buyer"] {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
         /* Progress Bar */
         .progress-bar {
             height: 8px;
@@ -1261,15 +1285,23 @@
             <div class="page-content" id="page-pipeline">
                 <div class="page-header">
                     <h1>Pipeline Management</h1>
-                    <p>Track active sellers and deal stages</p>
+                    <p>Track active clients and deal stages</p>
+                </div>
+
+                <!-- Client Type Filter -->
+                <div class="pipeline-stages" style="margin-bottom: 1rem;">
+                    <button class="stage-btn type-btn active" data-type="all">All Clients <span class="stage-count" id="count-type-all">0</span></button>
+                    <button class="stage-btn type-btn" data-type="seller" style="border-color: var(--info); color: var(--info);">Sellers <span class="stage-count" id="count-type-seller">0</span></button>
+                    <button class="stage-btn type-btn" data-type="buyer" style="border-color: var(--success); color: var(--success);">Buyers <span class="stage-count" id="count-type-buyer">0</span></button>
                 </div>
 
                 <!-- Pipeline Stages Filter -->
                 <div class="pipeline-stages">
-                    <button class="stage-btn active" data-stage="all">All <span class="stage-count" id="count-all">0</span></button>
+                    <button class="stage-btn active" data-stage="all">All Stages <span class="stage-count" id="count-all">0</span></button>
                     <button class="stage-btn" data-stage="prospect">Prospect <span class="stage-count" id="count-prospect">0</span></button>
                     <button class="stage-btn" data-stage="active">Active <span class="stage-count" id="count-active">0</span></button>
-                    <button class="stage-btn" data-stage="listing-meeting">Listing Meeting <span class="stage-count" id="count-listing-meeting">0</span></button>
+                    <button class="stage-btn" data-stage="listing-meeting">Listing Mtg <span class="stage-count" id="count-listing-meeting">0</span></button>
+                    <button class="stage-btn" data-stage="showing">Showing <span class="stage-count" id="count-showing">0</span></button>
                     <button class="stage-btn" data-stage="listed">Listed <span class="stage-count" id="count-listed">0</span></button>
                     <button class="stage-btn" data-stage="under-contract">Under Contract <span class="stage-count" id="count-under-contract">0</span></button>
                     <button class="stage-btn" data-stage="closed">Closed <span class="stage-count" id="count-closed">0</span></button>
@@ -1277,18 +1309,20 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h3>Sellers & Deals</h3>
-                        <button class="btn btn-primary" onclick="openAddSellerModal()">+ Add Seller</button>
+                        <h3>Clients & Deals</h3>
+                        <button class="btn btn-primary" onclick="openAddSellerModal()">+ Add Client</button>
                     </div>
                     <div class="card-body">
                         <div class="table-wrapper">
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>Type</th>
                                         <th>Name / Property</th>
                                         <th>Community</th>
-                                        <th>Est. Value</th>
+                                        <th>Value/Budget</th>
                                         <th>Timing</th>
+                                        <th>Originator</th>
                                         <th>Last Touch</th>
                                         <th>Stage</th>
                                         <th>Actions</th>
@@ -1296,7 +1330,7 @@
                                 </thead>
                                 <tbody id="pipeline-table">
                                     <tr>
-                                        <td colspan="7" style="text-align: center; color: var(--gray-400);">No sellers in pipeline</td>
+                                        <td colspan="9" style="text-align: center; color: var(--gray-400);">No clients in pipeline</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1796,32 +1830,69 @@
         </main>
     </div>
 
-    <!-- Add Seller Modal -->
+    <!-- Add Client Modal -->
     <div class="modal-overlay" id="seller-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3 id="seller-modal-title">Add New Seller</h3>
+                <h3 id="seller-modal-title">Add New Client</h3>
                 <button class="modal-close" onclick="closeModal('seller-modal')">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="seller-form">
                     <input type="hidden" id="seller-id">
                     <div class="form-group">
-                        <label>Seller Name</label>
-                        <input type="text" id="seller-name" required placeholder="e.g., John Smith">
+                        <label>Client Type</label>
+                        <select id="seller-type" onchange="toggleClientTypeFields()">
+                            <option value="seller">Seller</option>
+                            <option value="buyer">Buyer</option>
+                        </select>
                     </div>
                     <div class="form-group">
+                        <label>Client Name</label>
+                        <input type="text" id="seller-name" required placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group" id="field-address">
                         <label>Property Address</label>
                         <input type="text" id="seller-address" placeholder="e.g., 123 Main St">
                     </div>
                     <div class="form-group">
-                        <label>Community</label>
+                        <label id="label-community">Community</label>
                         <input type="text" id="seller-community" placeholder="e.g., Saint Andrews">
                     </div>
-                    <div class="form-group">
-                        <label>Estimated Value ($)</label>
-                        <input type="number" id="seller-value" placeholder="e.g., 2500000">
+
+                    <!-- Seller-specific fields -->
+                    <div id="seller-fields">
+                        <div class="form-group">
+                            <label>Estimated Value ($)</label>
+                            <input type="number" id="seller-value" placeholder="e.g., 2500000">
+                        </div>
+                        <div class="form-group">
+                            <label>Pricing Range Discussed?</label>
+                            <input type="text" id="seller-pricing" placeholder="e.g., $2.4M - $2.6M">
+                        </div>
                     </div>
+
+                    <!-- Buyer-specific fields -->
+                    <div id="buyer-fields" style="display: none;">
+                        <div class="form-group">
+                            <label>Budget Min ($)</label>
+                            <input type="number" id="buyer-budget-min" placeholder="e.g., 2000000">
+                        </div>
+                        <div class="form-group">
+                            <label>Budget Max ($)</label>
+                            <input type="number" id="buyer-budget-max" placeholder="e.g., 3000000">
+                        </div>
+                        <div class="form-group">
+                            <label>Pre-Approval Status</label>
+                            <select id="buyer-preapproval">
+                                <option value="none">Not Pre-Approved</option>
+                                <option value="pending">Pre-Approval Pending</option>
+                                <option value="approved">Pre-Approved</option>
+                                <option value="cash">Cash Buyer</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>Timing Window</label>
                         <select id="seller-timing">
@@ -1837,15 +1908,12 @@
                         <select id="seller-stage">
                             <option value="prospect">Prospect</option>
                             <option value="active">Active</option>
-                            <option value="listing-meeting">Listing Meeting</option>
-                            <option value="listed">Listed</option>
+                            <option value="listing-meeting" class="seller-stage-option">Listing Meeting</option>
+                            <option value="showing" class="buyer-stage-option" style="display: none;">Showing</option>
+                            <option value="listed" class="seller-stage-option">Listed</option>
                             <option value="under-contract">Under Contract</option>
                             <option value="closed">Closed</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Pricing Range Discussed?</label>
-                        <input type="text" id="seller-pricing" placeholder="e.g., $2.4M - $2.6M">
                     </div>
                     <div class="form-group">
                         <label>Next Action</label>

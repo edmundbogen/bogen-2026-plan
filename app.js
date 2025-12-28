@@ -33,14 +33,28 @@ const DEFAULT_SETTINGS = {
     targetActiveSellers: 20
 };
 
-const STAGES = ['prospect', 'active', 'listing-meeting', 'listed', 'under-contract', 'closed'];
+const STAGES = ['prospect', 'active', 'listing-meeting', 'showing', 'listed', 'under-contract', 'closed'];
 const STAGE_LABELS = {
     'prospect': 'Prospect',
     'active': 'Active',
     'listing-meeting': 'Listing Meeting',
+    'showing': 'Showing',
     'listed': 'Listed',
     'under-contract': 'Under Contract',
     'closed': 'Closed'
+};
+
+const ORIGINATOR_NAMES = {
+    'edmund': 'Edmund',
+    'dina': 'Dina',
+    'samantha': 'Samantha'
+};
+
+const PREAPPROVAL_LABELS = {
+    'none': 'Not Pre-Approved',
+    'pending': 'Pending',
+    'approved': 'Pre-Approved',
+    'cash': 'Cash Buyer'
 };
 
 // ===========================================
@@ -507,32 +521,63 @@ function renderStopLossAlerts(activeSellers, forecast, weekActivity) {
 // ===========================================
 
 let currentStageFilter = 'all';
+let currentTypeFilter = 'all';
 
 function initializePipelineFilters() {
-    document.querySelectorAll('.stage-btn').forEach(btn => {
+    // Stage filter buttons
+    document.querySelectorAll('.stage-btn:not(.type-btn)').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.stage-btn:not(.type-btn)').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentStageFilter = btn.dataset.stage;
+            renderPipeline();
+        });
+    });
+
+    // Type filter buttons (Sellers/Buyers)
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTypeFilter = btn.dataset.type;
             renderPipeline();
         });
     });
 }
 
 function renderPipeline() {
-    // Update counts
-    const allCount = appData.sellers.length;
-    document.getElementById('count-all').textContent = allCount;
+    // Update type counts
+    const allTypeCount = appData.sellers.length;
+    const sellerCount = appData.sellers.filter(s => s.type !== 'buyer').length;
+    const buyerCount = appData.sellers.filter(s => s.type === 'buyer').length;
 
+    document.getElementById('count-type-all').textContent = allTypeCount;
+    document.getElementById('count-type-seller').textContent = sellerCount;
+    document.getElementById('count-type-buyer').textContent = buyerCount;
+
+    // Update stage counts
+    document.getElementById('count-all').textContent = allTypeCount;
     STAGES.forEach(stage => {
-        const count = appData.sellers.filter(s => s.stage === stage).length;
-        document.getElementById(`count-${stage}`).textContent = count;
+        const countEl = document.getElementById(`count-${stage}`);
+        if (countEl) {
+            const count = appData.sellers.filter(s => s.stage === stage).length;
+            countEl.textContent = count;
+        }
     });
 
-    // Filter sellers
+    // Filter by type first
     let filtered = appData.sellers;
+    if (currentTypeFilter !== 'all') {
+        if (currentTypeFilter === 'seller') {
+            filtered = filtered.filter(s => s.type !== 'buyer');
+        } else {
+            filtered = filtered.filter(s => s.type === 'buyer');
+        }
+    }
+
+    // Then filter by stage
     if (currentStageFilter !== 'all') {
-        filtered = appData.sellers.filter(s => s.stage === currentStageFilter);
+        filtered = filtered.filter(s => s.stage === currentStageFilter);
     }
 
     // Sort by last touch date (most recent first)
@@ -545,23 +590,44 @@ function renderPipeline() {
     const tbody = document.getElementById('pipeline-table');
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--gray-400);">No sellers in this stage</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--gray-400);">No clients match the current filters</td></tr>';
         return;
     }
 
     tbody.innerHTML = filtered.map(s => {
         const daysSinceTouch = s.lastTouchDate ? Math.floor((new Date() - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24)) : 999;
         const touchStatus = daysSinceTouch <= 14 ? 'success' : daysSinceTouch <= 30 ? 'warning' : 'danger';
+        const isBuyer = s.type === 'buyer';
+        const typeLabel = isBuyer ? 'Buyer' : 'Seller';
+        const typeBadgeClass = isBuyer ? 'badge-buyer' : 'badge-seller';
+
+        // Value display: for buyers show budget range, for sellers show value
+        let valueDisplay = '-';
+        if (isBuyer) {
+            if (s.budgetMin || s.budgetMax) {
+                const min = s.budgetMin ? formatCurrency(s.budgetMin) : '?';
+                const max = s.budgetMax ? formatCurrency(s.budgetMax) : '?';
+                valueDisplay = `${min} - ${max}`;
+            }
+        } else {
+            valueDisplay = s.value ? formatCurrency(s.value) : '-';
+        }
+
+        // Originator display
+        const originatorName = ORIGINATOR_NAMES[s.originator] || s.originator || '-';
 
         return `
             <tr>
+                <td><span class="badge ${typeBadgeClass}">${typeLabel}</span></td>
                 <td>
                     <strong>${s.name || 'Unknown'}</strong>
                     ${s.address ? `<br><span style="font-size: 0.8125rem; color: var(--gray-500);">${s.address}</span>` : ''}
+                    ${isBuyer && s.preapproval ? `<br><span style="font-size: 0.75rem; color: var(--gray-400);">${PREAPPROVAL_LABELS[s.preapproval] || s.preapproval}</span>` : ''}
                 </td>
                 <td>${s.community || '-'}</td>
-                <td>${s.value ? formatCurrency(s.value) : '-'}</td>
+                <td>${valueDisplay}</td>
                 <td>${s.timing || '-'}</td>
+                <td><strong>${originatorName}</strong></td>
                 <td>
                     <span class="badge badge-${touchStatus}">
                         ${s.lastTouchDate ? `${daysSinceTouch}d ago` : 'Never'}
@@ -578,19 +644,54 @@ function renderPipeline() {
 }
 
 function openAddSellerModal() {
-    document.getElementById('seller-modal-title').textContent = 'Add New Seller';
+    document.getElementById('seller-modal-title').textContent = 'Add New Client';
     document.getElementById('seller-form').reset();
     document.getElementById('seller-id').value = '';
-    document.getElementById('activity-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('seller-type').value = 'seller';
+    document.getElementById('seller-originator').value = currentUser ? currentUser.id : 'edmund';
+    toggleClientTypeFields();
     openModal('seller-modal');
+}
+
+function toggleClientTypeFields() {
+    const type = document.getElementById('seller-type').value;
+    const isBuyer = type === 'buyer';
+
+    // Toggle field visibility
+    document.getElementById('seller-fields').style.display = isBuyer ? 'none' : 'block';
+    document.getElementById('buyer-fields').style.display = isBuyer ? 'block' : 'none';
+    document.getElementById('field-address').style.display = isBuyer ? 'none' : 'block';
+
+    // Toggle stage options
+    document.querySelectorAll('.seller-stage-option').forEach(opt => {
+        opt.style.display = isBuyer ? 'none' : '';
+    });
+    document.querySelectorAll('.buyer-stage-option').forEach(opt => {
+        opt.style.display = isBuyer ? '' : 'none';
+    });
+
+    // Update labels
+    const communityLabel = document.getElementById('label-community');
+    if (communityLabel) {
+        communityLabel.textContent = isBuyer ? 'Target Community' : 'Community';
+    }
+
+    // Update modal title for new clients
+    const titleEl = document.getElementById('seller-modal-title');
+    const isEdit = document.getElementById('seller-id').value !== '';
+    if (!isEdit) {
+        titleEl.textContent = isBuyer ? 'Add New Buyer' : 'Add New Seller';
+    }
 }
 
 function editSeller(id) {
     const seller = appData.sellers.find(s => s.id === id);
     if (!seller) return;
 
-    document.getElementById('seller-modal-title').textContent = 'Edit Seller';
+    const isBuyer = seller.type === 'buyer';
+    document.getElementById('seller-modal-title').textContent = isBuyer ? 'Edit Buyer' : 'Edit Seller';
     document.getElementById('seller-id').value = seller.id;
+    document.getElementById('seller-type').value = seller.type || 'seller';
     document.getElementById('seller-name').value = seller.name || '';
     document.getElementById('seller-address').value = seller.address || '';
     document.getElementById('seller-community').value = seller.community || '';
@@ -604,27 +705,41 @@ function editSeller(id) {
     document.getElementById('seller-close-date').value = seller.closeDate || '';
     document.getElementById('seller-notes').value = seller.notes || '';
 
+    // Buyer-specific fields
+    document.getElementById('buyer-budget-min').value = seller.budgetMin || '';
+    document.getElementById('buyer-budget-max').value = seller.budgetMax || '';
+    document.getElementById('buyer-preapproval').value = seller.preapproval || 'none';
+
+    toggleClientTypeFields();
     openModal('seller-modal');
 }
 
 function saveSeller() {
     const id = document.getElementById('seller-id').value || generateId();
     const isNew = !document.getElementById('seller-id').value;
+    const type = document.getElementById('seller-type').value;
+    const isBuyer = type === 'buyer';
 
     const seller = {
         id,
+        type: type,
         name: document.getElementById('seller-name').value,
-        address: document.getElementById('seller-address').value,
+        address: isBuyer ? '' : document.getElementById('seller-address').value,
         community: document.getElementById('seller-community').value,
-        value: parseFloat(document.getElementById('seller-value').value) || 0,
+        value: isBuyer ? 0 : (parseFloat(document.getElementById('seller-value').value) || 0),
         timing: document.getElementById('seller-timing').value,
         stage: document.getElementById('seller-stage').value,
-        pricing: document.getElementById('seller-pricing').value,
+        pricing: isBuyer ? '' : document.getElementById('seller-pricing').value,
         nextAction: document.getElementById('seller-next-action').value,
         originator: document.getElementById('seller-originator').value,
         probability: parseInt(document.getElementById('seller-probability').value) || 50,
         closeDate: document.getElementById('seller-close-date').value,
         notes: document.getElementById('seller-notes').value,
+        // Buyer-specific fields
+        budgetMin: isBuyer ? (parseFloat(document.getElementById('buyer-budget-min').value) || 0) : 0,
+        budgetMax: isBuyer ? (parseFloat(document.getElementById('buyer-budget-max').value) || 0) : 0,
+        preapproval: isBuyer ? document.getElementById('buyer-preapproval').value : '',
+        // Metadata
         lastTouchDate: isNew ? new Date().toISOString().split('T')[0] : (appData.sellers.find(s => s.id === id)?.lastTouchDate || new Date().toISOString().split('T')[0]),
         createdAt: isNew ? new Date().toISOString() : (appData.sellers.find(s => s.id === id)?.createdAt || new Date().toISOString())
     };
