@@ -965,6 +965,74 @@
                 display: none;
             }
         }
+
+        /* Role-based visibility - hidden by default, shown via JS */
+        .admin-only {
+            display: none;
+        }
+
+        .agent-visible {
+            display: none;
+        }
+
+        body.role-admin .admin-only {
+            display: flex;
+        }
+
+        body.role-admin .agent-visible {
+            display: none;
+        }
+
+        body.role-agent .agent-visible {
+            display: flex;
+        }
+
+        body.role-ops .agent-visible {
+            display: none;
+        }
+
+        /* Revenue tracking card */
+        .revenue-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .revenue-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .revenue-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
+
+        .revenue-item.highlight {
+            background: var(--gold);
+            color: var(--navy-dark);
+        }
+
+        .revenue-item .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+        }
+
+        .revenue-item.highlight .label {
+            color: var(--navy-dark);
+            opacity: 0.8;
+        }
+
+        .revenue-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
     </style>
 </head>
 <body>
@@ -1081,6 +1149,49 @@
                             <span>$0</span>
                             <span>$300,000 Floor</span>
                             <span>$402,000 Target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Tracking - Admin sees all, others see only their own -->
+                <div class="card admin-only" style="margin-bottom: 1.5rem;" id="revenue-card-admin">
+                    <div class="card-header">
+                        <h3>Team Revenue YTD</h3>
+                        <span class="badge badge-success">From Closed Deals</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="revenue-grid">
+                            <div class="revenue-item highlight">
+                                <div class="label">Edmund Net</div>
+                                <div class="value" id="revenue-edmund">$0</div>
+                            </div>
+                            <div class="revenue-item">
+                                <div class="label">Dina Net</div>
+                                <div class="value" id="revenue-dina">$0</div>
+                            </div>
+                            <div class="revenue-item">
+                                <div class="label">Samantha Net</div>
+                                <div class="value" id="revenue-samantha">$0</div>
+                            </div>
+                            <div class="revenue-item">
+                                <div class="label">Nicole Bonuses</div>
+                                <div class="value" id="revenue-nicole">$0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent's own revenue - visible only to agents -->
+                <div class="card agent-visible" style="margin-bottom: 1.5rem;" id="revenue-card-agent">
+                    <div class="card-header">
+                        <h3>Your Revenue YTD</h3>
+                        <span class="badge badge-success">From Closed Deals</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-card success" style="max-width: 300px; margin: 0 auto;">
+                            <div class="metric-label">Your Net Commission</div>
+                            <div class="metric-value positive" id="revenue-my-net">$0</div>
+                            <div class="metric-subtitle">Keep up the great work!</div>
                         </div>
                     </div>
                 </div>
@@ -1240,29 +1351,42 @@
                                     <span class="label">Gross Commission (<span id="result-rate">5.0</span>%)</span>
                                     <span class="value" id="result-gross">$100,000</span>
                                 </div>
-                                <div class="calc-line">
-                                    <span class="label">Brokerage (20% to Douglas Elliman)</span>
-                                    <span class="value" id="result-brokerage">-$20,000</span>
+
+                                <!-- Split Details - Admin Only -->
+                                <div class="calc-line admin-only">
+                                    <span class="label">Edmund's Share (<span id="result-edmund-split">60</span>%)</span>
+                                    <span class="value" id="result-edmund-pre">$60,000</span>
                                 </div>
-                                <div class="calc-line">
-                                    <span class="label">Post-Brokerage Commission</span>
-                                    <span class="value" id="result-post-brokerage">$80,000</span>
+                                <div class="calc-line admin-only">
+                                    <span class="label">Agent's Share (<span id="result-agent-split">40</span>%)</span>
+                                    <span class="value" id="result-agent-pre">$40,000</span>
                                 </div>
-                                <div class="calc-line">
-                                    <span class="label">Edmund's Share (<span id="result-edmund-pct">60</span>%)</span>
-                                    <span class="value" id="result-edmund-share">$48,000</span>
+
+                                <!-- Brokerage Splits - Admin Only -->
+                                <div class="calc-line admin-only" style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 0.5rem; padding-top: 0.75rem;">
+                                    <span class="label">Edmund to Brokerage (<span id="result-edmund-brokerage-pct">20</span>%)</span>
+                                    <span class="value" id="result-edmund-post">$48,000</span>
                                 </div>
-                                <div class="calc-line">
+                                <div class="calc-line admin-only">
+                                    <span class="label">Agent to Brokerage (<span id="result-agent-brokerage-pct">30</span>%)</span>
+                                    <span class="value" id="result-agent-post">$28,000</span>
+                                </div>
+
+                                <div class="calc-line admin-only">
                                     <span class="label">Nicole Bonus</span>
                                     <span class="value" id="result-nicole">-$1,000</span>
                                 </div>
-                                <div class="calc-line total">
+
+                                <!-- Net Results -->
+                                <div class="calc-line total admin-only">
                                     <span class="label">Net to Edmund</span>
                                     <span class="value highlight" id="result-edmund-net">$47,000</span>
                                 </div>
-                                <div class="calc-line">
-                                    <span class="label">Net to Agent</span>
-                                    <span class="value" id="result-agent-net">$32,000</span>
+
+                                <!-- Agent sees only their net -->
+                                <div class="calc-line total agent-visible">
+                                    <span class="label">Your Net Commission</span>
+                                    <span class="value highlight" id="result-agent-net">$28,000</span>
                                 </div>
                             </div>
                         </div>
@@ -1597,8 +1721,14 @@
                                 <input type="number" id="setting-commission-rate" value="5.0" step="0.1">
                             </div>
                             <div class="form-group">
-                                <label>Brokerage Split (% to Team)</label>
-                                <input type="number" id="setting-brokerage-split" value="80" step="1">
+                                <label>Edmund Brokerage Split (% Edmund Keeps)</label>
+                                <input type="number" id="setting-edmund-brokerage" value="80" step="1">
+                                <small style="color: var(--gray-500); font-size: 0.75rem;">Edmund keeps 80%, 20% goes to Douglas Elliman</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Agent Brokerage Split (% Agent Keeps)</label>
+                                <input type="number" id="setting-agent-brokerage" value="70" step="1">
+                                <small style="color: var(--gray-500); font-size: 0.75rem;">Agents keep 70%, 30% goes to Douglas Elliman</small>
                             </div>
                             <div class="form-group">
                                 <label>Edmund Share - Edmund Originated (%)</label>

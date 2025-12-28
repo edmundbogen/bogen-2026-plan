@@ -21,9 +21,10 @@ const USERS = {
 
 const DEFAULT_SETTINGS = {
     commissionRate: 5.0,
-    brokerageSplit: 80,
-    edmundOriginatedShare: 60,
-    agentOriginatedShare: 40,
+    edmundBrokerageSplit: 80,  // Edmund keeps 80% of his share
+    agentBrokerageSplit: 70,   // Agents keep 70% of their share
+    edmundOriginatedShare: 60, // Edmund gets 60% when he originates
+    agentOriginatedShare: 40,  // Edmund gets 40% when agent originates
     nicoleBonus: 1000,
     monthlyFloor: 25000,
     monthlyOps: 10000,
@@ -156,6 +157,10 @@ function showApp() {
     document.getElementById('current-user-name').textContent = currentUser.name;
     document.getElementById('current-user-role').textContent = currentUser.displayRole;
 
+    // Add role class to body for CSS visibility control
+    document.body.classList.remove('role-admin', 'role-agent', 'role-ops');
+    document.body.classList.add(`role-${currentUser.role}`);
+
     // Handle role-based nav visibility
     const navOps = document.getElementById('nav-ops');
     const navSettings = document.getElementById('nav-settings');
@@ -248,6 +253,31 @@ function renderDashboard() {
 
     // Stop-loss alerts
     renderStopLossAlerts(activeSellers.length, forecast60Day, weekActivity);
+
+    // Revenue tracking
+    renderRevenueTracking();
+}
+
+function renderRevenueTracking() {
+    const revenue = calculateRevenueByPerson();
+
+    // Admin sees all revenue
+    const edmundEl = document.getElementById('revenue-edmund');
+    const dinaEl = document.getElementById('revenue-dina');
+    const samanthaEl = document.getElementById('revenue-samantha');
+    const nicoleEl = document.getElementById('revenue-nicole');
+
+    if (edmundEl) edmundEl.textContent = formatCurrency(revenue.edmund);
+    if (dinaEl) dinaEl.textContent = formatCurrency(revenue.dina);
+    if (samanthaEl) samanthaEl.textContent = formatCurrency(revenue.samantha);
+    if (nicoleEl) nicoleEl.textContent = formatCurrency(revenue.nicole);
+
+    // Agent sees their own revenue
+    const myNetEl = document.getElementById('revenue-my-net');
+    if (myNetEl && currentUser) {
+        const myRevenue = revenue[currentUser.id] || 0;
+        myNetEl.textContent = formatCurrency(myRevenue);
+    }
 }
 
 function getActiveSellers() {
@@ -286,19 +316,97 @@ function calculate60DayForecast(deals) {
     }, 0);
 }
 
-function calculateNetToEdmund(price, isEdmundOriginated) {
+// Calculate full deal breakdown with separate brokerage splits
+function calculateDealBreakdown(price, isEdmundOriginated, agentId = null, commissionRate = null) {
     const s = appData.settings;
-    const grossCommission = price * (s.commissionRate / 100);
-    const postBrokerage = grossCommission * (s.brokerageSplit / 100);
-    const edmundShare = isEdmundOriginated ? s.edmundOriginatedShare : s.agentOriginatedShare;
-    const edmundGross = postBrokerage * (edmundShare / 100);
-    return edmundGross - s.nicoleBonus;
+    const rate = commissionRate || s.commissionRate;
+
+    // Step 1: Calculate gross commission
+    const grossCommission = price * (rate / 100);
+
+    // Step 2: Split between Edmund and Agent (before brokerage)
+    const edmundSplitPct = isEdmundOriginated ? s.edmundOriginatedShare : s.agentOriginatedShare;
+    const agentSplitPct = 100 - edmundSplitPct;
+
+    const edmundPreBrokerage = grossCommission * (edmundSplitPct / 100);
+    const agentPreBrokerage = grossCommission * (agentSplitPct / 100);
+
+    // Step 3: Apply different brokerage splits
+    // Edmund keeps 80%, Agent keeps 70%
+    const edmundPostBrokerage = edmundPreBrokerage * (s.edmundBrokerageSplit / 100);
+    const agentPostBrokerage = agentPreBrokerage * (s.agentBrokerageSplit / 100);
+
+    // Step 4: Edmund pays Nicole bonus
+    const edmundNet = edmundPostBrokerage - s.nicoleBonus;
+    const agentNet = agentPostBrokerage;
+
+    // Calculate what goes to Douglas Elliman
+    const edmundToBrokerage = edmundPreBrokerage - edmundPostBrokerage;
+    const agentToBrokerage = agentPreBrokerage - agentPostBrokerage;
+    const totalToBrokerage = edmundToBrokerage + agentToBrokerage;
+
+    return {
+        grossCommission,
+        edmundSplitPct,
+        agentSplitPct,
+        edmundPreBrokerage,
+        agentPreBrokerage,
+        edmundBrokeragePct: s.edmundBrokerageSplit,
+        agentBrokeragePct: s.agentBrokerageSplit,
+        edmundPostBrokerage,
+        agentPostBrokerage,
+        edmundToBrokerage,
+        agentToBrokerage,
+        totalToBrokerage,
+        nicoleBonus: s.nicoleBonus,
+        edmundNet,
+        agentNet,
+        agentId
+    };
+}
+
+function calculateNetToEdmund(price, isEdmundOriginated) {
+    const breakdown = calculateDealBreakdown(price, isEdmundOriginated);
+    return breakdown.edmundNet;
 }
 
 function calculateNetYTD(closedDeals) {
     return closedDeals.reduce((sum, deal) => {
         return sum + calculateNetToEdmund(deal.value || 0, deal.originator === 'edmund');
     }, 0);
+}
+
+// Calculate revenue by team member from closed deals
+function calculateRevenueByPerson() {
+    const closedDeals = appData.sellers.filter(s => s.stage === 'closed');
+
+    const revenue = {
+        edmund: 0,
+        dina: 0,
+        samantha: 0,
+        nicole: 0  // Nicole's bonuses
+    };
+
+    closedDeals.forEach(deal => {
+        const isEdmundOriginated = deal.originator === 'edmund';
+        const breakdown = calculateDealBreakdown(deal.value || 0, isEdmundOriginated, deal.agentId);
+
+        revenue.edmund += breakdown.edmundNet;
+        revenue.nicole += breakdown.nicoleBonus;
+
+        // Assign agent revenue based on who worked the deal
+        if (deal.agentId === 'dina') {
+            revenue.dina += breakdown.agentNet;
+        } else if (deal.agentId === 'samantha') {
+            revenue.samantha += breakdown.agentNet;
+        } else if (!isEdmundOriginated && deal.originator === 'dina') {
+            revenue.dina += breakdown.agentNet;
+        } else if (!isEdmundOriginated && deal.originator === 'samantha') {
+            revenue.samantha += breakdown.agentNet;
+        }
+    });
+
+    return revenue;
 }
 
 function getWeekActivity() {
@@ -583,34 +691,48 @@ function calculateDeal() {
     const coBroke = document.getElementById('calc-cobroke').value;
 
     const s = appData.settings;
-    const grossCommission = price * (commissionRate / 100);
-    const brokerageAmount = grossCommission * ((100 - s.brokerageSplit) / 100);
-    const postBrokerage = grossCommission - brokerageAmount;
+    const isEdmundOriginated = originator === 'edmund';
 
-    let edmundPct, agentPct;
+    // Handle solo deals (no co-broke)
     if (coBroke === 'no') {
-        edmundPct = 100;
-        agentPct = 0;
-    } else {
-        edmundPct = originator === 'edmund' ? s.edmundOriginatedShare : s.agentOriginatedShare;
-        agentPct = 100 - edmundPct;
+        const grossCommission = price * (commissionRate / 100);
+        const edmundNet = grossCommission * (s.edmundBrokerageSplit / 100) - s.nicoleBonus;
+
+        document.getElementById('result-price').textContent = formatCurrency(price);
+        document.getElementById('result-rate').textContent = commissionRate.toFixed(1);
+        document.getElementById('result-gross').textContent = formatCurrency(grossCommission);
+        document.getElementById('result-edmund-split').textContent = '100';
+        document.getElementById('result-agent-split').textContent = '0';
+        document.getElementById('result-edmund-pre').textContent = formatCurrency(grossCommission);
+        document.getElementById('result-agent-pre').textContent = formatCurrency(0);
+        document.getElementById('result-edmund-brokerage-pct').textContent = s.edmundBrokerageSplit;
+        document.getElementById('result-agent-brokerage-pct').textContent = s.agentBrokerageSplit;
+        document.getElementById('result-edmund-post').textContent = formatCurrency(grossCommission * (s.edmundBrokerageSplit / 100));
+        document.getElementById('result-agent-post').textContent = formatCurrency(0);
+        document.getElementById('result-nicole').textContent = `-${formatCurrency(s.nicoleBonus)}`;
+        document.getElementById('result-edmund-net').textContent = formatCurrency(edmundNet);
+        document.getElementById('result-agent-net').textContent = formatCurrency(0);
+        return;
     }
 
-    const edmundShare = postBrokerage * (edmundPct / 100);
-    const agentShare = postBrokerage * (agentPct / 100);
-    const edmundNet = edmundShare - s.nicoleBonus;
+    // Co-broke deal - use the full breakdown
+    const breakdown = calculateDealBreakdown(price, isEdmundOriginated, null, commissionRate);
 
     // Update display
     document.getElementById('result-price').textContent = formatCurrency(price);
     document.getElementById('result-rate').textContent = commissionRate.toFixed(1);
-    document.getElementById('result-gross').textContent = formatCurrency(grossCommission);
-    document.getElementById('result-brokerage').textContent = `-${formatCurrency(brokerageAmount)}`;
-    document.getElementById('result-post-brokerage').textContent = formatCurrency(postBrokerage);
-    document.getElementById('result-edmund-pct').textContent = edmundPct;
-    document.getElementById('result-edmund-share').textContent = formatCurrency(edmundShare);
-    document.getElementById('result-nicole').textContent = `-${formatCurrency(s.nicoleBonus)}`;
-    document.getElementById('result-edmund-net').textContent = formatCurrency(edmundNet);
-    document.getElementById('result-agent-net').textContent = formatCurrency(agentShare);
+    document.getElementById('result-gross').textContent = formatCurrency(breakdown.grossCommission);
+    document.getElementById('result-edmund-split').textContent = breakdown.edmundSplitPct;
+    document.getElementById('result-agent-split').textContent = breakdown.agentSplitPct;
+    document.getElementById('result-edmund-pre').textContent = formatCurrency(breakdown.edmundPreBrokerage);
+    document.getElementById('result-agent-pre').textContent = formatCurrency(breakdown.agentPreBrokerage);
+    document.getElementById('result-edmund-brokerage-pct').textContent = breakdown.edmundBrokeragePct;
+    document.getElementById('result-agent-brokerage-pct').textContent = breakdown.agentBrokeragePct;
+    document.getElementById('result-edmund-post').textContent = formatCurrency(breakdown.edmundPostBrokerage);
+    document.getElementById('result-agent-post').textContent = formatCurrency(breakdown.agentPostBrokerage);
+    document.getElementById('result-nicole').textContent = `-${formatCurrency(breakdown.nicoleBonus)}`;
+    document.getElementById('result-edmund-net').textContent = formatCurrency(breakdown.edmundNet);
+    document.getElementById('result-agent-net').textContent = formatCurrency(breakdown.agentNet);
 }
 
 // Add event listeners for calculator
@@ -783,7 +905,8 @@ function renderOpsPage() {
 function loadSettingsForm() {
     const s = appData.settings;
     document.getElementById('setting-commission-rate').value = s.commissionRate;
-    document.getElementById('setting-brokerage-split').value = s.brokerageSplit;
+    document.getElementById('setting-edmund-brokerage').value = s.edmundBrokerageSplit;
+    document.getElementById('setting-agent-brokerage').value = s.agentBrokerageSplit;
     document.getElementById('setting-edmund-originated').value = s.edmundOriginatedShare;
     document.getElementById('setting-agent-originated').value = s.agentOriginatedShare;
     document.getElementById('setting-nicole-bonus').value = s.nicoleBonus;
@@ -800,7 +923,8 @@ function saveSettings() {
     appData.settings = {
         ...appData.settings,
         commissionRate: parseFloat(document.getElementById('setting-commission-rate').value) || 5.0,
-        brokerageSplit: parseFloat(document.getElementById('setting-brokerage-split').value) || 80,
+        edmundBrokerageSplit: parseFloat(document.getElementById('setting-edmund-brokerage').value) || 80,
+        agentBrokerageSplit: parseFloat(document.getElementById('setting-agent-brokerage').value) || 70,
         edmundOriginatedShare: parseFloat(document.getElementById('setting-edmund-originated').value) || 60,
         agentOriginatedShare: parseFloat(document.getElementById('setting-agent-originated').value) || 40,
         nicoleBonus: parseFloat(document.getElementById('setting-nicole-bonus').value) || 1000,
