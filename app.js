@@ -653,12 +653,155 @@ function renderPipeline() {
                 </td>
                 <td><span class="badge badge-info">${STAGE_LABELS[s.stage] || s.stage}</span></td>
                 <td>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewClient('${s.id}')">View</button>
                     <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openActivityModal('${s.id}')">Log</button>
                     <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editSeller('${s.id}')">Edit</button>
                 </td>
             </tr>
         `;
     }).join('');
+}
+
+// ===========================================
+// CLIENT DETAIL VIEW
+// ===========================================
+
+let currentDetailClientId = null;
+
+function viewClient(id) {
+    const client = appData.sellers.find(s => s.id === id);
+    if (!client) return;
+
+    currentDetailClientId = id;
+    const isBuyer = client.type === 'buyer';
+
+    // Set title
+    document.getElementById('client-detail-title').textContent = client.name || 'Client Details';
+
+    // Build info section
+    const leadSource = client.leadSourceId ? appData.leadSources.find(ls => ls.id === client.leadSourceId) : null;
+
+    let infoHtml = `
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Type</div>
+                <div><span class="badge ${isBuyer ? 'badge-buyer' : 'badge-seller'}">${isBuyer ? 'Buyer' : 'Seller'}</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Stage</div>
+                <div><span class="badge badge-info">${STAGE_LABELS[client.stage] || client.stage}</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">${isBuyer ? 'Target Community' : 'Community'}</div>
+                <div>${client.community || '-'}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">${isBuyer ? 'Budget' : 'Value'}</div>
+                <div>${isBuyer ? (client.budgetMin || client.budgetMax ? `${formatCurrency(client.budgetMin || 0)} - ${formatCurrency(client.budgetMax || 0)}` : '-') : (client.value ? formatCurrency(client.value) : '-')}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Originator</div>
+                <div><strong>${ORIGINATOR_NAMES[client.originator] || client.originator || '-'}</strong></div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Referred By</div>
+                <div>${leadSource ? leadSource.name : 'Direct / No Referral'}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Timing</div>
+                <div>${client.timing || '-'}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Probability</div>
+                <div>${client.probability || 50}%</div>
+            </div>
+        </div>
+    `;
+
+    // Add address for sellers
+    if (!isBuyer && client.address) {
+        infoHtml = `
+            <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--gray-100); border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Property Address</div>
+                <div style="font-weight: 600;">${client.address}</div>
+            </div>
+        ` + infoHtml;
+    }
+
+    // Add notes if present
+    if (client.notes) {
+        infoHtml += `
+            <div style="margin-top: 1rem; padding: 0.75rem; background: var(--gray-100); border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Notes</div>
+                <div>${client.notes}</div>
+            </div>
+        `;
+    }
+
+    document.getElementById('client-detail-info').innerHTML = infoHtml;
+
+    // Render activity history
+    renderClientActivities(id);
+
+    openModal('client-detail-modal');
+}
+
+function renderClientActivities(clientId) {
+    const activities = (appData.activities || [])
+        .filter(a => a.sellerId === clientId)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const container = document.getElementById('client-activity-list');
+
+    if (activities.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray-400); text-align: center;">No activities logged yet</p>';
+        return;
+    }
+
+    const activityTypeLabels = {
+        'seller_call': 'Seller Call',
+        'seller_meeting': 'Seller Meeting',
+        'pricing_discussion': 'Pricing Discussion',
+        'listing_appointment': 'Listing Appointment',
+        'showing': 'Showing',
+        'offer_received': 'Offer Received',
+        'other': 'Other'
+    };
+
+    const outcomeColors = {
+        'positive': 'var(--success)',
+        'neutral': 'var(--gray-500)',
+        'negative': 'var(--danger)'
+    };
+
+    container.innerHTML = activities.map(a => `
+        <div style="padding: 0.75rem; border-bottom: 1px solid var(--gray-200); display: flex; gap: 1rem;">
+            <div style="min-width: 80px; font-size: 0.8125rem; color: var(--gray-500);">
+                ${new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    ${activityTypeLabels[a.type] || a.type}
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: ${outcomeColors[a.outcome] || outcomeColors.neutral};"></span>
+                </div>
+                ${a.notes ? `<div style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.25rem;">${a.notes}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function logActivityFromDetail() {
+    if (currentDetailClientId) {
+        closeModal('client-detail-modal');
+        openActivityModal(currentDetailClientId);
+    }
+}
+
+function editClientFromDetail() {
+    if (currentDetailClientId) {
+        closeModal('client-detail-modal');
+        editSeller(currentDetailClientId);
+    }
 }
 
 function openAddSellerModal() {

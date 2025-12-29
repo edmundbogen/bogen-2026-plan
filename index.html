@@ -2075,6 +2075,37 @@
         </div>
     </div>
 
+    <!-- Client Detail Modal -->
+    <div class="modal-overlay" id="client-detail-modal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="client-detail-title">Client Details</h3>
+                <button class="modal-close" onclick="closeModal('client-detail-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Client Info Summary -->
+                <div id="client-detail-info" style="margin-bottom: 1.5rem;"></div>
+
+                <!-- Activity History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 style="font-size: 1rem;">Activity History</h3>
+                        <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8125rem;" onclick="logActivityFromDetail()">+ Log Activity</button>
+                    </div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                        <div id="client-activity-list">
+                            <p style="color: var(--gray-400); text-align: center;">No activities logged yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('client-detail-modal')">Close</button>
+                <button class="btn btn-primary" onclick="editClientFromDetail()">Edit Client</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Lead Source Modal -->
     <div class="modal-overlay" id="lead-source-modal">
         <div class="modal">
