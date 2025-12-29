@@ -57,6 +57,20 @@ const PREAPPROVAL_LABELS = {
     'cash': 'Cash Buyer'
 };
 
+const LEAD_SOURCE_TYPES = {
+    'attorney': 'Attorney',
+    'cpa': 'CPA/Accountant',
+    'financial-advisor': 'Financial Advisor',
+    'past-client': 'Past Client',
+    'builder': 'Builder/Developer',
+    'contractor': 'Contractor',
+    'mortgage': 'Mortgage Broker',
+    'title': 'Title Company',
+    'friend': 'Friend/Family',
+    'agent': 'Other Agent',
+    'other': 'Other'
+};
+
 // ===========================================
 // STATE MANAGEMENT
 // ===========================================
@@ -67,6 +81,8 @@ let appData = {
     sellers: [],
     deals: [],
     activities: [],
+    leadSources: [],
+    leadSourceTouches: [],
     weeklyScores: [],
     vacations: [],
     teamGoals: {
@@ -197,8 +213,10 @@ function showApp() {
     // Render all pages
     renderDashboard();
     renderPipeline();
+    renderLeadSources();
     renderTeamGoals();
     renderOpsPage();
+    populateLeadSourceDropdown();
 }
 
 // ===========================================
@@ -649,6 +667,7 @@ function openAddSellerModal() {
     document.getElementById('seller-id').value = '';
     document.getElementById('seller-type').value = 'seller';
     document.getElementById('seller-originator').value = currentUser ? currentUser.id : 'edmund';
+    populateLeadSourceDropdown();
     toggleClientTypeFields();
     openModal('seller-modal');
 }
@@ -710,6 +729,10 @@ function editSeller(id) {
     document.getElementById('buyer-budget-max').value = seller.budgetMax || '';
     document.getElementById('buyer-preapproval').value = seller.preapproval || 'none';
 
+    // Lead source
+    populateLeadSourceDropdown();
+    document.getElementById('seller-lead-source').value = seller.leadSourceId || '';
+
     toggleClientTypeFields();
     openModal('seller-modal');
 }
@@ -739,6 +762,8 @@ function saveSeller() {
         budgetMin: isBuyer ? (parseFloat(document.getElementById('buyer-budget-min').value) || 0) : 0,
         budgetMax: isBuyer ? (parseFloat(document.getElementById('buyer-budget-max').value) || 0) : 0,
         preapproval: isBuyer ? document.getElementById('buyer-preapproval').value : '',
+        // Lead source
+        leadSourceId: document.getElementById('seller-lead-source').value || null,
         // Metadata
         lastTouchDate: isNew ? new Date().toISOString().split('T')[0] : (appData.sellers.find(s => s.id === id)?.lastTouchDate || new Date().toISOString().split('T')[0]),
         createdAt: isNew ? new Date().toISOString() : (appData.sellers.find(s => s.id === id)?.createdAt || new Date().toISOString())
@@ -757,6 +782,7 @@ function saveSeller() {
     closeModal('seller-modal');
     renderPipeline();
     renderDashboard();
+    renderLeadSources();
 }
 
 function openActivityModal(sellerId) {
@@ -977,6 +1003,221 @@ function renderTeamGoals() {
             </div>
         `;
     }).join('');
+}
+
+// ===========================================
+// LEAD SOURCES
+// ===========================================
+
+function renderLeadSources() {
+    const sources = appData.leadSources || [];
+
+    // Calculate metrics
+    const totalSources = sources.length;
+    const leadsCount = appData.sellers.filter(s => s.leadSourceId).length;
+    const closedFromReferrals = appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed').length;
+
+    // Count sources needing touch (30+ days)
+    const now = new Date();
+    const needTouch = sources.filter(s => {
+        if (!s.lastTouchDate) return true;
+        const daysSince = Math.floor((now - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24));
+        return daysSince >= 30;
+    }).length;
+
+    // Update metrics
+    document.getElementById('ls-total-count').textContent = totalSources;
+    document.getElementById('ls-leads-count').textContent = leadsCount;
+    document.getElementById('ls-closed-count').textContent = closedFromReferrals;
+    document.getElementById('ls-need-touch').textContent = needTouch;
+
+    // Render table
+    const tbody = document.getElementById('lead-sources-table');
+
+    if (sources.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--gray-400);">No lead sources added yet</td></tr>';
+    } else {
+        // Sort by last touch date (oldest first to prioritize follow-ups)
+        const sorted = [...sources].sort((a, b) => {
+            const dateA = a.lastTouchDate ? new Date(a.lastTouchDate) : new Date(0);
+            const dateB = b.lastTouchDate ? new Date(b.lastTouchDate) : new Date(0);
+            return dateA - dateB;
+        });
+
+        tbody.innerHTML = sorted.map(s => {
+            const leadsSent = appData.sellers.filter(c => c.leadSourceId === s.id).length;
+            const closedDeals = appData.sellers.filter(c => c.leadSourceId === s.id && c.stage === 'closed').length;
+            const daysSinceTouch = s.lastTouchDate ? Math.floor((now - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24)) : 999;
+            const touchStatus = daysSinceTouch <= 14 ? 'success' : daysSinceTouch <= 30 ? 'warning' : 'danger';
+
+            return `
+                <tr>
+                    <td>
+                        <strong>${s.name || 'Unknown'}</strong>
+                        ${s.phone ? `<br><span style="font-size: 0.8125rem; color: var(--gray-500);">${s.phone}</span>` : ''}
+                    </td>
+                    <td>${LEAD_SOURCE_TYPES[s.type] || s.type || '-'}</td>
+                    <td>${s.company || '-'}</td>
+                    <td><strong>${leadsSent}</strong></td>
+                    <td><span class="badge ${closedDeals > 0 ? 'badge-success' : 'badge-gray'}">${closedDeals}</span></td>
+                    <td>
+                        <span class="badge badge-${touchStatus}">
+                            ${s.lastTouchDate ? `${daysSinceTouch}d ago` : 'Never'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openLeadSourceTouchModal('${s.id}')">Touch</button>
+                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editLeadSource('${s.id}')">Edit</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Render top referrers
+    renderTopReferrers();
+}
+
+function renderTopReferrers() {
+    const container = document.getElementById('top-referrers-list');
+
+    // Calculate revenue per lead source
+    const sourceRevenue = {};
+    appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed').forEach(client => {
+        const sourceId = client.leadSourceId;
+        if (!sourceRevenue[sourceId]) {
+            sourceRevenue[sourceId] = { deals: 0, revenue: 0 };
+        }
+        sourceRevenue[sourceId].deals++;
+        sourceRevenue[sourceId].revenue += calculateNetToEdmund(client.value || 0, client.originator === 'edmund');
+    });
+
+    // Sort by revenue
+    const topSources = Object.entries(sourceRevenue)
+        .map(([id, data]) => {
+            const source = appData.leadSources.find(s => s.id === id);
+            return { ...data, source };
+        })
+        .filter(s => s.source)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+    if (topSources.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray-400); text-align: center;">Add lead sources and link clients to see your top referrers</p>';
+        return;
+    }
+
+    container.innerHTML = topSources.map((s, i) => `
+        <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: ${i === 0 ? 'var(--gold-light)' : 'var(--gray-100)'}; border-radius: 6px;">
+            <div style="font-size: 1.5rem; font-weight: 700; color: ${i === 0 ? 'var(--gold-dark)' : 'var(--gray-400)'}; width: 2rem;">#${i + 1}</div>
+            <div style="flex: 1;">
+                <strong>${s.source.name}</strong>
+                <span style="color: var(--gray-500); font-size: 0.875rem;"> - ${LEAD_SOURCE_TYPES[s.source.type] || s.source.type}</span>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 600; color: var(--success);">${formatCurrency(s.revenue)}</div>
+                <div style="font-size: 0.75rem; color: var(--gray-500);">${s.deals} deal${s.deals !== 1 ? 's' : ''}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openAddLeadSourceModal() {
+    document.getElementById('lead-source-modal-title').textContent = 'Add Lead Source';
+    document.getElementById('lead-source-form').reset();
+    document.getElementById('lead-source-id').value = '';
+    openModal('lead-source-modal');
+}
+
+function editLeadSource(id) {
+    const source = appData.leadSources.find(s => s.id === id);
+    if (!source) return;
+
+    document.getElementById('lead-source-modal-title').textContent = 'Edit Lead Source';
+    document.getElementById('lead-source-id').value = source.id;
+    document.getElementById('lead-source-name').value = source.name || '';
+    document.getElementById('lead-source-type').value = source.type || 'other';
+    document.getElementById('lead-source-company').value = source.company || '';
+    document.getElementById('lead-source-phone').value = source.phone || '';
+    document.getElementById('lead-source-email').value = source.email || '';
+    document.getElementById('lead-source-notes').value = source.notes || '';
+
+    openModal('lead-source-modal');
+}
+
+function saveLeadSource() {
+    const id = document.getElementById('lead-source-id').value || generateId();
+    const isNew = !document.getElementById('lead-source-id').value;
+
+    const source = {
+        id,
+        name: document.getElementById('lead-source-name').value,
+        type: document.getElementById('lead-source-type').value,
+        company: document.getElementById('lead-source-company').value,
+        phone: document.getElementById('lead-source-phone').value,
+        email: document.getElementById('lead-source-email').value,
+        notes: document.getElementById('lead-source-notes').value,
+        lastTouchDate: isNew ? null : (appData.leadSources.find(s => s.id === id)?.lastTouchDate || null),
+        createdAt: isNew ? new Date().toISOString() : (appData.leadSources.find(s => s.id === id)?.createdAt || new Date().toISOString())
+    };
+
+    if (isNew) {
+        appData.leadSources.push(source);
+    } else {
+        const idx = appData.leadSources.findIndex(s => s.id === id);
+        if (idx !== -1) {
+            appData.leadSources[idx] = source;
+        }
+    }
+
+    saveData();
+    closeModal('lead-source-modal');
+    renderLeadSources();
+    populateLeadSourceDropdown();
+}
+
+function openLeadSourceTouchModal(sourceId) {
+    document.getElementById('touch-lead-source-id').value = sourceId;
+    document.getElementById('lead-source-touch-form').reset();
+    document.getElementById('touch-lead-source-id').value = sourceId;
+    document.getElementById('touch-date').value = new Date().toISOString().split('T')[0];
+    openModal('lead-source-touch-modal');
+}
+
+function saveLeadSourceTouch() {
+    const sourceId = document.getElementById('touch-lead-source-id').value;
+
+    const touch = {
+        id: generateId(),
+        leadSourceId: sourceId,
+        type: document.getElementById('touch-type').value,
+        date: document.getElementById('touch-date').value,
+        notes: document.getElementById('touch-notes').value,
+        createdAt: new Date().toISOString()
+    };
+
+    appData.leadSourceTouches.push(touch);
+
+    // Update last touch date on source
+    const source = appData.leadSources.find(s => s.id === sourceId);
+    if (source) {
+        source.lastTouchDate = touch.date;
+    }
+
+    saveData();
+    closeModal('lead-source-touch-modal');
+    renderLeadSources();
+}
+
+function populateLeadSourceDropdown() {
+    const dropdown = document.getElementById('seller-lead-source');
+    if (!dropdown) return;
+
+    const sources = appData.leadSources || [];
+
+    // Keep the first "no referral" option and rebuild the rest
+    dropdown.innerHTML = '<option value="">-- No referral / Direct --</option>' +
+        sources.map(s => `<option value="${s.id}">${s.name} (${LEAD_SOURCE_TYPES[s.type] || s.type})</option>`).join('');
 }
 
 // ===========================================

@@ -1114,6 +1114,7 @@
             <div class="nav-inner">
                 <a class="nav-item active" data-page="dashboard">Dashboard</a>
                 <a class="nav-item" data-page="pipeline">Pipeline</a>
+                <a class="nav-item" data-page="lead-sources">Lead Sources</a>
                 <a class="nav-item" data-page="calculator">Deal Calculator</a>
                 <a class="nav-item" data-page="quarter-plan">Quarter Plan</a>
                 <a class="nav-item" data-page="team-goals">Team Goals</a>
@@ -1334,6 +1335,79 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lead Sources Page -->
+            <div class="page-content" id="page-lead-sources">
+                <div class="page-header">
+                    <h1>Lead Sources</h1>
+                    <p>Track referral partners and centers of influence</p>
+                </div>
+
+                <!-- Lead Source Metrics -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="metric-card">
+                        <div class="metric-label">Total Lead Sources</div>
+                        <div class="metric-value neutral" id="ls-total-count">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Leads Received</div>
+                        <div class="metric-value neutral" id="ls-leads-count">0</div>
+                        <div class="metric-subtitle">All time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Closed from Referrals</div>
+                        <div class="metric-value positive" id="ls-closed-count">0</div>
+                        <div class="metric-subtitle">Deals closed</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-label">Need Touch (30+ Days)</div>
+                        <div class="metric-value warning" id="ls-need-touch">0</div>
+                        <div class="metric-subtitle">Follow up soon</div>
+                    </div>
+                </div>
+
+                <!-- Lead Sources Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Referral Partners</h3>
+                        <button class="btn btn-primary" onclick="openAddLeadSourceModal()">+ Add Lead Source</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Company</th>
+                                        <th>Leads Sent</th>
+                                        <th>Closed Deals</th>
+                                        <th>Last Touch</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lead-sources-table">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--gray-400);">No lead sources added yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Referrers -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Top Referrers by Closed Business</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="top-referrers-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <p style="color: var(--gray-400); text-align: center;">Add lead sources and link clients to see your top referrers</p>
                         </div>
                     </div>
                 </div>
@@ -1928,6 +2002,12 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label>Referred By (Lead Source)</label>
+                        <select id="seller-lead-source">
+                            <option value="">-- No referral / Direct --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>Close Probability (%)</label>
                         <input type="number" id="seller-probability" value="50" min="0" max="100">
                     </div>
@@ -1991,6 +2071,102 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('activity-modal')">Cancel</button>
                 <button class="btn btn-primary" onclick="saveActivity()">Log Activity</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Source Modal -->
+    <div class="modal-overlay" id="lead-source-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="lead-source-modal-title">Add Lead Source</h3>
+                <button class="modal-close" onclick="closeModal('lead-source-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="lead-source-form">
+                    <input type="hidden" id="lead-source-id">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="lead-source-name" required placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Relationship Type</label>
+                        <select id="lead-source-type">
+                            <option value="attorney">Attorney</option>
+                            <option value="cpa">CPA/Accountant</option>
+                            <option value="financial-advisor">Financial Advisor</option>
+                            <option value="past-client">Past Client</option>
+                            <option value="builder">Builder/Developer</option>
+                            <option value="contractor">Contractor</option>
+                            <option value="mortgage">Mortgage Broker</option>
+                            <option value="title">Title Company</option>
+                            <option value="friend">Friend/Family</option>
+                            <option value="agent">Other Agent</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Company/Firm</label>
+                        <input type="text" id="lead-source-company" placeholder="e.g., Smith Law Firm">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="lead-source-phone" placeholder="e.g., 561-555-1234">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="lead-source-email" placeholder="e.g., john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="lead-source-notes" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px;" placeholder="How did you meet? Any important details?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('lead-source-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveLeadSource()">Save Lead Source</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lead Source Touch Modal -->
+    <div class="modal-overlay" id="lead-source-touch-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Log Touch</h3>
+                <button class="modal-close" onclick="closeModal('lead-source-touch-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="lead-source-touch-form">
+                    <input type="hidden" id="touch-lead-source-id">
+                    <div class="form-group">
+                        <label>Touch Type</label>
+                        <select id="touch-type">
+                            <option value="call">Phone Call</option>
+                            <option value="meeting">In-Person Meeting</option>
+                            <option value="lunch">Lunch/Coffee</option>
+                            <option value="email">Email</option>
+                            <option value="text">Text Message</option>
+                            <option value="gift">Sent Gift</option>
+                            <option value="event">Event Together</option>
+                            <option value="referral-thanks">Referral Thank You</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="touch-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="touch-notes" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px;" placeholder="What was discussed?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('lead-source-touch-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveLeadSourceTouch()">Log Touch</button>
             </div>
         </div>
     </div>
