@@ -342,7 +342,10 @@ function get60DayDeals() {
 
 function calculate60DayForecast(deals) {
     return deals.reduce((sum, deal) => {
-        const net = calculateNetToEdmund(deal.value || 0, deal.originator === 'edmund');
+        const isBuyer = deal.type === 'buyer';
+        // For buyers, use budgetMax as estimated value; for sellers, use value
+        const dealValue = isBuyer ? (deal.budgetMax || deal.budgetMin || 0) : (deal.value || 0);
+        const net = calculateNetToEdmund(dealValue, deal.originator === 'edmund');
         const probability = (deal.probability || 50) / 100;
         return sum + (net * probability);
     }, 0);
@@ -464,17 +467,26 @@ function renderUpcomingClosings(deals) {
     const tbody = document.getElementById('upcoming-closings-table');
 
     if (deals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--gray-400);">No upcoming closings in next 60 days</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--gray-400);">No upcoming closings in next 60 days</td></tr>';
         return;
     }
 
+    // Sort by close date
+    deals.sort((a, b) => new Date(a.closeDate) - new Date(b.closeDate));
+
     tbody.innerHTML = deals.map(d => {
-        const net = calculateNetToEdmund(d.value || 0, d.originator === 'edmund');
+        const isBuyer = d.type === 'buyer';
+        // For buyers, use budgetMax as estimated value; for sellers, use value
+        const dealValue = isBuyer ? (d.budgetMax || d.budgetMin || 0) : (d.value || 0);
+        const net = calculateNetToEdmund(dealValue, d.originator === 'edmund');
         const prob = d.probability || 50;
+        const typeBadge = isBuyer ? '<span class="badge badge-buyer">Buyer</span>' : '<span class="badge badge-seller">Seller</span>';
+
         return `
             <tr>
+                <td>${typeBadge}</td>
                 <td>${d.name || d.address || 'TBD'}</td>
-                <td>${formatCurrency(d.value || 0)}</td>
+                <td>${formatCurrency(dealValue)}</td>
                 <td style="color: var(--success);">${formatCurrency(net)}</td>
                 <td><span class="badge ${prob >= 75 ? 'badge-success' : prob >= 50 ? 'badge-warning' : 'badge-gray'}">${prob}%</span></td>
             </tr>
