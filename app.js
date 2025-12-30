@@ -328,16 +328,48 @@ function getActiveSellers() {
     });
 }
 
-function get60DayDeals() {
+let currentClosingRange = 60;
+
+function getDealsInRange(days) {
     const now = new Date();
-    const future60 = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    now.setHours(0, 0, 0, 0);
 
     return appData.sellers.filter(s => {
         if (s.stage === 'closed') return false;
         if (!s.closeDate) return false;
         const closeDate = new Date(s.closeDate);
-        return closeDate >= now && closeDate <= future60;
+        closeDate.setHours(0, 0, 0, 0);
+
+        // Must be in the future
+        if (closeDate < now) return false;
+
+        // If 'all', return all future deals
+        if (days === 'all') return true;
+
+        // Otherwise, check if within range
+        const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+        return closeDate <= futureDate;
     });
+}
+
+function get60DayDeals() {
+    return getDealsInRange(60);
+}
+
+function filterClosingRange(days) {
+    currentClosingRange = days;
+
+    // Update button states
+    document.querySelectorAll('.closing-range-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.range == days) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Re-render closings with new range
+    const deals = getDealsInRange(days);
+    renderUpcomingClosings(deals);
 }
 
 function calculate60DayForecast(deals) {
