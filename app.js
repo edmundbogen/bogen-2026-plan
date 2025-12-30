@@ -14,13 +14,18 @@ let syncStatus = 'offline'; // 'online', 'offline', 'syncing', 'error'
 // Initialize Supabase client
 function initSupabase() {
     try {
-        if (window.supabase) {
+        // Check for Supabase library (loaded from CDN)
+        if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase initialized');
+            console.log('Supabase initialized successfully');
             return true;
+        } else {
+            console.log('Supabase library not loaded, using localStorage only');
+            syncStatus = 'offline';
         }
     } catch (err) {
         console.error('Failed to initialize Supabase:', err);
+        syncStatus = 'offline';
     }
     return false;
 }
@@ -148,8 +153,25 @@ let appData = {
 // ===========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    initSupabase();
-    await loadData();
+    try {
+        initSupabase();
+    } catch (err) {
+        console.error('Supabase init failed:', err);
+    }
+
+    try {
+        await loadData();
+    } catch (err) {
+        console.error('Load data failed:', err);
+        // Fallback to localStorage only
+        const saved = localStorage.getItem('bogen2026Data');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            appData = { ...appData, ...parsed };
+            appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
+        }
+    }
+
     checkAuth();
     initializeNavigation();
     initializeChecklist();
@@ -161,14 +183,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadData() {
     // First, load from localStorage as fallback/cache
-    const saved = localStorage.getItem('bogen2026Data');
-    if (saved) {
-        const parsed = JSON.parse(saved);
-        appData = { ...appData, ...parsed };
-        appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
+    try {
+        const saved = localStorage.getItem('bogen2026Data');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            appData = { ...appData, ...parsed };
+            appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
+        }
+    } catch (err) {
+        console.error('Failed to load from localStorage:', err);
     }
 
-    // Then try to load from Supabase
+    // Then try to load from Supabase (if available)
     if (supabase) {
         try {
             syncStatus = 'syncing';
@@ -184,7 +210,7 @@ async function loadData() {
                 // PGRST116 = no rows found (first time)
                 console.error('Supabase load error:', error);
                 syncStatus = 'error';
-            } else if (data) {
+            } else if (data && data.data) {
                 // Merge cloud data with defaults
                 appData = { ...appData, ...data.data };
                 appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
