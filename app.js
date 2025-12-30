@@ -8,7 +8,7 @@
 const SUPABASE_URL = 'https://qaariaqrekfmeocweasn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Z1-HThhTRRLzrHLnvGZ5RA_qUA3-wgP';
 
-let supabase = null;
+let supabaseClient = null;
 let syncStatus = 'offline'; // 'online', 'offline', 'syncing', 'error'
 
 // Initialize Supabase client
@@ -16,7 +16,7 @@ function initSupabase() {
     try {
         // Check for Supabase library (loaded from CDN)
         if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             console.log('Supabase initialized successfully');
             return true;
         } else {
@@ -195,12 +195,12 @@ async function loadData() {
     }
 
     // Then try to load from Supabase (if available)
-    if (supabase) {
+    if (supabaseClient) {
         try {
             syncStatus = 'syncing';
             updateSyncStatusUI();
 
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('bogen_2026_data')
                 .select('data')
                 .eq('user_id', 'bogen_team')
@@ -235,12 +235,12 @@ async function saveData() {
     localStorage.setItem('bogen2026Data', JSON.stringify(appData));
 
     // Then sync to Supabase
-    if (supabase) {
+    if (supabaseClient) {
         try {
             syncStatus = 'syncing';
             updateSyncStatusUI();
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('bogen_2026_data')
                 .upsert({
                     user_id: 'bogen_team',
