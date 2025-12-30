@@ -2,6 +2,30 @@
 // Application Logic
 
 // ===========================================
+// SUPABASE CONFIGURATION
+// ===========================================
+
+const SUPABASE_URL = 'https://qaariaqrekfmeocweasn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Z1-HThhTRRLzrHLnvGZ5RA_qUA3-wgP';
+
+let supabase = null;
+let syncStatus = 'offline'; // 'online', 'offline', 'syncing', 'error'
+
+// Initialize Supabase client
+function initSupabase() {
+    try {
+        if (window.supabase) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase initialized');
+            return true;
+        }
+    } catch (err) {
+        console.error('Failed to initialize Supabase:', err);
+    }
+    return false;
+}
+
+// ===========================================
 // CONFIGURATION & CONSTANTS
 // ===========================================
 
@@ -123,28 +147,111 @@ let appData = {
 // INITIALIZATION
 // ===========================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadData();
+document.addEventListener('DOMContentLoaded', async () => {
+    initSupabase();
+    await loadData();
     checkAuth();
     initializeNavigation();
     initializeChecklist();
     initializePipelineFilters();
     calculateDeal(); // Initialize calculator
     updateWeekDateRange();
+    updateSyncStatusUI();
 });
 
-function loadData() {
+async function loadData() {
+    // First, load from localStorage as fallback/cache
     const saved = localStorage.getItem('bogen2026Data');
     if (saved) {
         const parsed = JSON.parse(saved);
         appData = { ...appData, ...parsed };
-        // Ensure settings have all defaults
         appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
     }
+
+    // Then try to load from Supabase
+    if (supabase) {
+        try {
+            syncStatus = 'syncing';
+            updateSyncStatusUI();
+
+            const { data, error } = await supabase
+                .from('bogen_2026_data')
+                .select('data')
+                .eq('user_id', 'bogen_team')
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                // PGRST116 = no rows found (first time)
+                console.error('Supabase load error:', error);
+                syncStatus = 'error';
+            } else if (data) {
+                // Merge cloud data with defaults
+                appData = { ...appData, ...data.data };
+                appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
+                // Update localStorage with cloud data
+                localStorage.setItem('bogen2026Data', JSON.stringify(appData));
+                syncStatus = 'online';
+                console.log('Data loaded from Supabase');
+            } else {
+                // No data in cloud yet, we'll create it on first save
+                syncStatus = 'online';
+            }
+        } catch (err) {
+            console.error('Failed to load from Supabase:', err);
+            syncStatus = 'error';
+        }
+    }
+    updateSyncStatusUI();
 }
 
-function saveData() {
+async function saveData() {
+    // Always save to localStorage first (instant, offline-capable)
     localStorage.setItem('bogen2026Data', JSON.stringify(appData));
+
+    // Then sync to Supabase
+    if (supabase) {
+        try {
+            syncStatus = 'syncing';
+            updateSyncStatusUI();
+
+            const { error } = await supabase
+                .from('bogen_2026_data')
+                .upsert({
+                    user_id: 'bogen_team',
+                    data: appData,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id'
+                });
+
+            if (error) {
+                console.error('Supabase save error:', error);
+                syncStatus = 'error';
+            } else {
+                syncStatus = 'online';
+                console.log('Data saved to Supabase');
+            }
+        } catch (err) {
+            console.error('Failed to save to Supabase:', err);
+            syncStatus = 'error';
+        }
+    }
+    updateSyncStatusUI();
+}
+
+function updateSyncStatusUI() {
+    const indicator = document.getElementById('sync-status');
+    if (!indicator) return;
+
+    const statusConfig = {
+        'online': { text: 'Synced', color: 'var(--success)', icon: '☁️' },
+        'offline': { text: 'Offline', color: 'var(--gray-500)', icon: '💾' },
+        'syncing': { text: 'Syncing...', color: 'var(--warning)', icon: '🔄' },
+        'error': { text: 'Sync Error', color: 'var(--danger)', icon: '⚠️' }
+    };
+
+    const config = statusConfig[syncStatus] || statusConfig.offline;
+    indicator.innerHTML = `<span style="color: ${config.color};">${config.icon} ${config.text}</span>`;
 }
 
 // ===========================================
