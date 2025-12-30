@@ -287,6 +287,50 @@ async function syncNow() {
     }
 
     const btn = document.getElementById('sync-now-btn');
+
+    // Count local records
+    const localClients = (appData.sellers || []).length;
+    const localActivities = (appData.activities || []).length;
+    const localLeadSources = (appData.leadSources || []).length;
+
+    // Fetch cloud record counts
+    let cloudClients = 0;
+    let cloudActivities = 0;
+    let cloudLeadSources = 0;
+
+    try {
+        const { data: cloudData } = await supabaseClient
+            .from('bogen_2026_data')
+            .select('data')
+            .eq('user_id', 'bogen_team')
+            .single();
+
+        if (cloudData && cloudData.data) {
+            cloudClients = (cloudData.data.sellers || []).length;
+            cloudActivities = (cloudData.data.activities || []).length;
+            cloudLeadSources = (cloudData.data.leadSources || []).length;
+        }
+    } catch (err) {
+        console.log('No existing cloud data or error fetching:', err);
+    }
+
+    // Show confirmation with record counts
+    const message = `⚠️ SYNC CONFIRMATION\n\n` +
+        `LOCAL DATA (will be pushed to cloud):\n` +
+        `• ${localClients} clients\n` +
+        `• ${localActivities} activities\n` +
+        `• ${localLeadSources} lead sources\n\n` +
+        `CLOUD DATA (will be overwritten):\n` +
+        `• ${cloudClients} clients\n` +
+        `• ${cloudActivities} activities\n` +
+        `• ${cloudLeadSources} lead sources\n\n` +
+        `Do you want to push your local data to the cloud?\n` +
+        `(This will OVERWRITE all cloud data)`;
+
+    if (!confirm(message)) {
+        return;
+    }
+
     if (btn) {
         btn.disabled = true;
         btn.textContent = 'Syncing...';
