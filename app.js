@@ -280,6 +280,36 @@ function updateSyncStatusUI() {
     indicator.innerHTML = `<span style="color: ${config.color};">${config.icon} ${config.text}</span>`;
 }
 
+async function syncNow() {
+    if (!supabaseClient) {
+        alert('Supabase is not connected. Data is saved locally only.');
+        return;
+    }
+
+    const btn = document.getElementById('sync-now-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Syncing...';
+    }
+
+    try {
+        await saveData();
+        if (syncStatus === 'online') {
+            alert('Data synced successfully to cloud!');
+        } else {
+            alert('Sync encountered an issue. Check console for details.');
+        }
+    } catch (err) {
+        console.error('Manual sync failed:', err);
+        alert('Sync failed: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Sync Now';
+        }
+    }
+}
+
 // ===========================================
 // AUTHENTICATION
 // ===========================================

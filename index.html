@@ -1111,7 +1111,10 @@
                     <span class="header-title">2026 Operating Plan</span>
                 </div>
                 <div class="header-user">
-                    <div id="sync-status" style="font-size: 0.75rem; margin-right: 1rem;"><span style="color: var(--gray-500);">💾 Offline</span></div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
+                        <div id="sync-status" style="font-size: 0.75rem;"><span style="color: var(--gray-500);">💾 Offline</span></div>
+                        <button id="sync-now-btn" onclick="syncNow()" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; background: var(--navy-light); color: white; border: none; border-radius: 4px; cursor: pointer;">Sync Now</button>
+                    </div>
                     <div class="user-info">
                         <div class="user-name" id="current-user-name">Edmund Bogen</div>
                         <div class="user-role" id="current-user-role">Admin</div>
