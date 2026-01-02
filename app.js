@@ -191,6 +191,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function seedClients() {
     const seedData = [
         {
+            id: 'client_iacometta_debra',
+            type: 'seller',
+            name: 'Debra A. Iacometta',
+            address: '17603 Foxborough Ln',
+            community: 'St Andrews Country Club',
+            value: 0,
+            timing: '3-6',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Initial outreach',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `PROPERTY:
+17603 Foxborough Ln, Boca Raton FL 33496
+St Andrews Country Club PL 2
+Parcel: 00-42-46-33-02-000-0660
+3,529 sq ft single family
+Purchased: 05/16/2020 (Book/Page: 31456/1733)
+Use Type: 0100 - Single Family
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 0,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-02',
+            createdAt: '2026-01-02T12:00:00.000Z'
+        },
+        {
             id: 'client_satovsky_jonathan',
             type: 'buyer',
             name: 'Jonathan Satovsky',
