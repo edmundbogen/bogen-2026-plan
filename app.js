@@ -172,6 +172,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Add seed clients if they don't exist
+    await seedClients();
+
     checkAuth();
     initializeNavigation();
     initializeChecklist();
@@ -180,6 +183,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateWeekDateRange();
     updateSyncStatusUI();
 });
+
+// ===========================================
+// SEED CLIENTS - Auto-add new clients from code
+// ===========================================
+
+async function seedClients() {
+    const seedData = [
+        {
+            id: 'client_satovsky_jonathan',
+            type: 'buyer',
+            name: 'Jonathan Satovsky',
+            address: '',
+            community: 'Broward / Palm Beach / Martin Counties',
+            value: 0,
+            timing: '0-3',
+            stage: 'active',
+            pricing: '',
+            nextAction: 'Send initial property options meeting live-work, scalability, and HOA covenant criteria',
+            originator: 'edmund',
+            probability: 60,
+            closeDate: '2026-06-01',
+            notes: `CONTACT: 917-565-0195
+
+REFERRAL: Dad is member at St. Andrews Country Club
+
+BUDGET: $2-4M, flexible to go higher for right property
+
+AREAS: Broward, Palm Beach, or Martin Counties. Priorities: good restaurants, easy airport access.
+
+PURPOSE: Live-work arrangement for tax residency. Must establish FL property as PRIMARY OFFICE (not NYC). Optics matter for IRS - needs to look like credible operating headquarters.
+
+BUSINESSES:
+• Satovsky Asset Management (Jonathan)
+• FinDash.ai - fintech venture with his son
+• Care Find - girlfriend Larisa's nursing registry
+
+REQUIREMENTS:
+• Single-family home ONLY
+• Model: His SoHo loft - open professional space for employees + entertaining
+• Hosts Shabbat dinners regularly - layout must be welcoming for guests AND credible as professional office
+• Employee scalability critical - may exceed 2 non-resident employees as businesses grow
+• Look for: detached structures, guest houses, carriage houses for dedicated office space
+• HOA MUST allow home-based business - filter out restrictive covenants upfront
+
+LEGAL CONTEXT: FL Statute §559.955 (HB 403, 2021) pre-empts local restrictions on home-based businesses. Allows 2 onsite employees, unlimited remote. Does NOT pre-empt HOA restrictions.
+
+TEAM: Dina added for property research, zoning context, comparative analysis. Nicole added for operations support.
+
+NEXT STEPS: Huddle with team, send property options for Jonathan to review with accountant/attorney.
+
+--- EMAIL THREAD: Jan 1, 2026 ---`,
+            budgetMin: 2000000,
+            budgetMax: 4000000,
+            preapproval: 'pending',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-01',
+            createdAt: '2026-01-01T21:00:00.000Z'
+        }
+    ];
+
+    let added = false;
+    for (const client of seedData) {
+        const exists = appData.sellers.some(s => s.id === client.id);
+        if (!exists) {
+            appData.sellers.push(client);
+            added = true;
+            console.log('Seeded client:', client.name);
+        }
+    }
+
+    if (added) {
+        await saveData();
+    }
+}
 
 async function loadData() {
     // First, load from localStorage as fallback/cache
