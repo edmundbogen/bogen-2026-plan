@@ -882,12 +882,9 @@ function renderStopLossAlerts(activeSellers, forecast, weekActivity) {
 
     const container = document.getElementById('stop-loss-alerts');
     container.innerHTML = alerts.map(a => `
-        <div class="alert-banner ${a.type}">
+        <div class="alert-banner ${a.type}" title="${a.message}">
             <span class="alert-icon">${a.type === 'danger' ? '⚠️' : '⚡'}</span>
-            <div class="alert-content">
-                <div class="alert-title">${a.title}</div>
-                <div class="alert-message">${a.message}</div>
-            </div>
+            <span class="alert-title">${a.title.replace('STOP-LOSS: ', '')}</span>
         </div>
     `).join('');
 }
