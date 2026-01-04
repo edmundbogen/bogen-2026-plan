@@ -1509,25 +1509,60 @@ function renderTeamGoals() {
 
 function renderLeadSources() {
     const sources = appData.leadSources || [];
-
-    // Calculate metrics
-    const totalSources = sources.length;
-    const leadsCount = appData.sellers.filter(s => s.leadSourceId).length;
-    const closedFromReferrals = appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed').length;
-
-    // Count sources needing touch (30+ days)
     const now = new Date();
-    const needTouch = sources.filter(s => {
+
+    // Calculate metrics with details for tooltips
+    const totalSources = sources.length;
+    const sourceNames = sources.map(s => s.name).slice(0, 10);
+    const sourceNamesTooltip = sourceNames.length > 0
+        ? sourceNames.join('\n') + (sources.length > 10 ? `\n...and ${sources.length - 10} more` : '')
+        : 'No lead sources added';
+
+    const leadsFromReferrals = appData.sellers.filter(s => s.leadSourceId);
+    const leadsCount = leadsFromReferrals.length;
+    const leadsTooltip = leadsFromReferrals.length > 0
+        ? leadsFromReferrals.slice(0, 10).map(c => {
+            const source = sources.find(s => s.id === c.leadSourceId);
+            return `${c.name} (from ${source?.name || 'Unknown'})`;
+        }).join('\n') + (leadsFromReferrals.length > 10 ? `\n...and ${leadsFromReferrals.length - 10} more` : '')
+        : 'No leads from referrals yet';
+
+    const closedClients = appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed');
+    const closedFromReferrals = closedClients.length;
+    const closedTooltip = closedClients.length > 0
+        ? closedClients.slice(0, 10).map(c => {
+            const source = sources.find(s => s.id === c.leadSourceId);
+            return `${c.name} (from ${source?.name || 'Unknown'})`;
+        }).join('\n') + (closedClients.length > 10 ? `\n...and ${closedClients.length - 10} more` : '')
+        : 'No closed deals from referrals yet';
+
+    // Sources needing touch (30+ days)
+    const needTouchSources = sources.filter(s => {
         if (!s.lastTouchDate) return true;
         const daysSince = Math.floor((now - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24));
         return daysSince >= 30;
-    }).length;
+    });
+    const needTouch = needTouchSources.length;
+    const needTouchTooltip = needTouchSources.length > 0
+        ? needTouchSources.slice(0, 10).map(s => {
+            const days = s.lastTouchDate
+                ? Math.floor((now - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24)) + ' days ago'
+                : 'Never contacted';
+            return `${s.name} (${days})`;
+        }).join('\n') + (needTouchSources.length > 10 ? `\n...and ${needTouchSources.length - 10} more` : '')
+        : 'All lead sources contacted recently';
 
     // Update metrics
     document.getElementById('ls-total-count').textContent = totalSources;
     document.getElementById('ls-leads-count').textContent = leadsCount;
     document.getElementById('ls-closed-count').textContent = closedFromReferrals;
     document.getElementById('ls-need-touch').textContent = needTouch;
+
+    // Update tooltips
+    document.getElementById('ls-total-card').title = sourceNamesTooltip;
+    document.getElementById('ls-leads-card').title = leadsTooltip;
+    document.getElementById('ls-closed-card').title = closedTooltip;
+    document.getElementById('ls-need-touch-card').title = needTouchTooltip;
 
     // Render table
     const tbody = document.getElementById('lead-sources-table');
