@@ -410,6 +410,34 @@ ORIGINATOR: Dina
             leadSourceId: null,
             lastTouchDate: '2026-01-19',
             createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_brivio_sofia',
+            type: 'buyer',
+            name: 'Sofia Brivio',
+            address: '',
+            community: '',
+            value: 1500000,
+            timing: '0-3',
+            stage: 'active',
+            pricing: '',
+            nextAction: 'Awaiting response on offer',
+            originator: 'edmund',
+            probability: 60,
+            closeDate: '',
+            notes: `BUDGET: $1.5M
+
+STATUS: Offer out for $1.5M
+
+TEAM: Edmund (originator) + Dina Ulrich
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 1500000,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
         }
     ];
 
