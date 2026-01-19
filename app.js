@@ -326,6 +326,62 @@ RELATIONSHIP: Friend of Edmund
             leadSourceId: null,
             lastTouchDate: '2026-01-19',
             createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_goodwitch_ronnie_seller',
+            type: 'seller',
+            name: 'Ronnie & Allison Goodwitch',
+            address: '',
+            community: 'East Boca',
+            value: 4500000,
+            timing: '0-3',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Initial outreach',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `PROPERTY VALUE: $4.5M
+
+COMMUNITY: East Boca
+
+DUAL TRANSACTION: Selling this home to purchase $5.5M home
+See also: Ronnie & Allison Goodwitch (Buyer)
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 0,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_goodwitch_ronnie_buyer',
+            type: 'buyer',
+            name: 'Ronnie & Allison Goodwitch',
+            address: '',
+            community: '',
+            value: 0,
+            timing: '0-3',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Initial outreach',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `BUDGET: $5.5M
+
+DUAL TRANSACTION: Purchasing after selling East Boca home ($4.5M)
+See also: Ronnie & Allison Goodwitch (Seller)
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 5500000,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
         }
     ];
 
