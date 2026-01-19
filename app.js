@@ -382,6 +382,34 @@ See also: Ronnie & Allison Goodwitch (Seller)
             leadSourceId: null,
             lastTouchDate: '2026-01-19',
             createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_lieberman_mitch_tina',
+            type: 'buyer',
+            name: 'Mitch & Tina Lieberman',
+            address: '',
+            community: 'Polo Club',
+            value: 0,
+            timing: '0-3',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Initial outreach',
+            originator: 'dina',
+            probability: 30,
+            closeDate: '',
+            notes: `BUDGET: $4M-$5M
+
+COMMUNITY: Polo Club
+
+ORIGINATOR: Dina
+
+--- More details to be added ---`,
+            budgetMin: 4000000,
+            budgetMax: 5000000,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
         }
     ];
 
