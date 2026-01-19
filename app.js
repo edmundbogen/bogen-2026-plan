@@ -296,6 +296,36 @@ AREAS: St Andrews Country Club
             leadSourceId: null,
             lastTouchDate: '2026-01-19',
             createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_chen_michael',
+            type: 'seller',
+            name: 'Michael Chen',
+            address: '',
+            community: 'The Sanctuary',
+            value: 7000000,
+            timing: '6+',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Listing appointment this evening',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `PROPERTY VALUE: $7M
+
+COMMUNITY: The Sanctuary
+
+TIMING: Listing next summer
+
+RELATIONSHIP: Friend of Edmund
+
+--- Listing appointment scheduled for Jan 19, 2026 ---`,
+            budgetMin: 0,
+            budgetMax: 0,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
         }
     ];
 
