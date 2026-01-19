@@ -270,6 +270,32 @@ NEXT STEPS: Huddle with team, send property options for Jonathan to review with 
             leadSourceId: null,
             lastTouchDate: '2026-01-01',
             createdAt: '2026-01-01T21:00:00.000Z'
+        },
+        {
+            id: 'client_kriess_david',
+            type: 'buyer',
+            name: 'David Kriess',
+            address: '',
+            community: 'St Andrews Country Club',
+            value: 0,
+            timing: '0-3',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Initial outreach',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `BUDGET: Up to $7M
+
+AREAS: St Andrews Country Club
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 7000000,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
         }
     ];
 
