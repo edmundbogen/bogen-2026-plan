@@ -450,7 +450,7 @@ TEAM: Edmund (originator) + Dina Ulrich
             stage: 'prospect',
             pricing: '',
             nextAction: 'Show properties Jan 26-28',
-            originator: 'edmund',
+            originator: 'dina',
             probability: 30,
             closeDate: '',
             notes: `BUDGET: Up to $1.5M
@@ -478,7 +478,7 @@ VISITING: Jan 26-28, 2026
             stage: 'prospect',
             pricing: '',
             nextAction: 'Initial outreach',
-            originator: 'edmund',
+            originator: 'dina',
             probability: 30,
             closeDate: '',
             notes: `BUDGET: Up to $1.5M
