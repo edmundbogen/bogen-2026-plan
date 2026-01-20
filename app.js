@@ -438,6 +438,64 @@ TEAM: Edmund (originator) + Dina Ulrich
             leadSourceId: null,
             lastTouchDate: '2026-01-19',
             createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_buonpastore_anthony_chris',
+            type: 'buyer',
+            name: 'Anthony & Chris Buonpastore',
+            address: '',
+            community: 'Beachy area',
+            value: 0,
+            timing: '0-3',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Show properties Jan 26-28',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `BUDGET: Up to $1.5M
+
+PURPOSE: Second home, want a beachy place
+
+VISITING: Jan 26-28, 2026
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 1500000,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
+        },
+        {
+            id: 'client_richland_karina_garrett',
+            type: 'buyer',
+            name: 'Karina & Garrett Richland',
+            address: '',
+            community: 'Lake Ida',
+            value: 0,
+            timing: '0-3',
+            stage: 'prospect',
+            pricing: '',
+            nextAction: 'Initial outreach',
+            originator: 'edmund',
+            probability: 30,
+            closeDate: '',
+            notes: `BUDGET: Up to $1.5M
+
+FROM: Mission Viejo, California
+
+REQUIREMENT: Need to homestead Florida
+
+CRITERIA: Cute, walkable place - Lake Ida area
+
+--- More details to be added ---`,
+            budgetMin: 0,
+            budgetMax: 1500000,
+            preapproval: '',
+            leadSourceId: null,
+            lastTouchDate: '2026-01-19',
+            createdAt: '2026-01-19T12:00:00.000Z'
         }
     ];
 
