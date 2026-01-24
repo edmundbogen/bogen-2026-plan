@@ -1354,6 +1354,65 @@ function viewClient(id) {
         ` + infoHtml;
     }
 
+    // Add contact information section
+    const hasContactInfo = client.phone || client.email || client.currentAddress;
+    if (hasContactInfo) {
+        infoHtml += `
+            <div style="margin-top: 1rem; padding: 1rem; background: var(--gray-100); border-radius: 8px;">
+                <div style="font-size: 0.75rem; color: var(--navy); text-transform: uppercase; margin-bottom: 0.75rem; font-weight: 600;">Contact Information</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                    ${client.phone ? `
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Phone</div>
+                        <div><a href="tel:${client.phone}" style="color: var(--brand-primary); text-decoration: none;">${client.phone}</a></div>
+                    </div>` : ''}
+                    ${client.email ? `
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Email</div>
+                        <div><a href="mailto:${client.email}" style="color: var(--brand-primary); text-decoration: none;">${client.email}</a></div>
+                    </div>` : ''}
+                    ${client.currentAddress ? `
+                    <div style="grid-column: span 2;">
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Current Address</div>
+                        <div>${client.currentAddress}</div>
+                    </div>` : ''}
+                    ${client.contactPref ? `
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Preferred Contact</div>
+                        <div>${client.contactPref === 'call' ? 'Phone Call' : client.contactPref === 'text' ? 'Text Message' : client.contactPref === 'email' ? 'Email' : 'Any Method'}</div>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Add spouse/partner section
+    const hasSpouseInfo = client.spouseName || client.spousePhone || client.spouseEmail;
+    if (hasSpouseInfo) {
+        infoHtml += `
+            <div style="margin-top: 1rem; padding: 1rem; background: var(--brand-primary-light); border-radius: 8px;">
+                <div style="font-size: 0.75rem; color: var(--navy); text-transform: uppercase; margin-bottom: 0.75rem; font-weight: 600;">Spouse / Partner</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                    ${client.spouseName ? `
+                    <div style="grid-column: span 2;">
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Name</div>
+                        <div style="font-weight: 500;">${client.spouseName}</div>
+                    </div>` : ''}
+                    ${client.spousePhone ? `
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Phone</div>
+                        <div><a href="tel:${client.spousePhone}" style="color: var(--brand-primary); text-decoration: none;">${client.spousePhone}</a></div>
+                    </div>` : ''}
+                    ${client.spouseEmail ? `
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase;">Email</div>
+                        <div><a href="mailto:${client.spouseEmail}" style="color: var(--brand-primary); text-decoration: none;">${client.spouseEmail}</a></div>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
     // Add notes if present
     if (client.notes) {
         infoHtml += `
@@ -1481,6 +1540,19 @@ function editSeller(id) {
     document.getElementById('seller-id').value = seller.id;
     document.getElementById('seller-type').value = seller.type || 'seller';
     document.getElementById('seller-name').value = seller.name || '';
+
+    // Contact information
+    document.getElementById('seller-phone').value = seller.phone || '';
+    document.getElementById('seller-email').value = seller.email || '';
+    document.getElementById('seller-current-address').value = seller.currentAddress || '';
+    document.getElementById('seller-contact-pref').value = seller.contactPref || '';
+
+    // Spouse/Partner information
+    document.getElementById('seller-spouse-name').value = seller.spouseName || '';
+    document.getElementById('seller-spouse-phone').value = seller.spousePhone || '';
+    document.getElementById('seller-spouse-email').value = seller.spouseEmail || '';
+
+    // Property/Deal info
     document.getElementById('seller-address').value = seller.address || '';
     document.getElementById('seller-community').value = seller.community || '';
     document.getElementById('seller-value').value = seller.value || '';
@@ -1516,6 +1588,16 @@ function saveSeller() {
         id,
         type: type,
         name: document.getElementById('seller-name').value,
+        // Contact information
+        phone: document.getElementById('seller-phone').value,
+        email: document.getElementById('seller-email').value,
+        currentAddress: document.getElementById('seller-current-address').value,
+        contactPref: document.getElementById('seller-contact-pref').value,
+        // Spouse/Partner information
+        spouseName: document.getElementById('seller-spouse-name').value,
+        spousePhone: document.getElementById('seller-spouse-phone').value,
+        spouseEmail: document.getElementById('seller-spouse-email').value,
+        // Property/Deal info
         address: isBuyer ? '' : document.getElementById('seller-address').value,
         community: document.getElementById('seller-community').value,
         value: isBuyer ? 0 : (parseFloat(document.getElementById('seller-value').value) || 0),
