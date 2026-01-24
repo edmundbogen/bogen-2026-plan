@@ -1942,6 +1942,7 @@
             <div class="mobile-nav-items">
                 <button class="mobile-nav-item active" data-page="dashboard">Dashboard</button>
                 <button class="mobile-nav-item" data-page="pipeline">Pipeline</button>
+                <button class="mobile-nav-item" data-page="contacts">Contacts</button>
                 <button class="mobile-nav-item" data-page="lead-sources">Lead Sources</button>
                 <button class="mobile-nav-item" data-page="calculator">Deal Calculator</button>
                 <button class="mobile-nav-item" data-page="quarter-plan">Quarter Plan</button>
@@ -1960,6 +1961,7 @@
             <div class="nav-inner" role="tablist" aria-label="Page sections">
                 <button class="nav-item active" data-page="dashboard" role="tab" aria-selected="true" aria-controls="page-dashboard">Dashboard</button>
                 <button class="nav-item" data-page="pipeline" role="tab" aria-selected="false" aria-controls="page-pipeline">Pipeline</button>
+                <button class="nav-item" data-page="contacts" role="tab" aria-selected="false" aria-controls="page-contacts">Contacts</button>
                 <button class="nav-item" data-page="lead-sources" role="tab" aria-selected="false" aria-controls="page-lead-sources">Lead Sources</button>
                 <button class="nav-item" data-page="calculator" role="tab" aria-selected="false" aria-controls="page-calculator">Deal Calculator</button>
                 <button class="nav-item" data-page="quarter-plan" role="tab" aria-selected="false" aria-controls="page-quarter-plan">Quarter Plan</button>
@@ -2193,6 +2195,77 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contacts Page -->
+            <section class="page-content" id="page-contacts" role="tabpanel" aria-labelledby="contacts-heading">
+                <div class="page-header">
+                    <h1 id="contacts-heading">Contacts Directory</h1>
+                    <p>All client contact information in one place</p>
+                </div>
+
+                <!-- Contact Stats -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 1.5rem;">
+                    <div class="metric-card">
+                        <div class="metric-label">Total Clients</div>
+                        <div class="metric-value neutral" id="contacts-total">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">With Phone</div>
+                        <div class="metric-value positive" id="contacts-with-phone">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">With Email</div>
+                        <div class="metric-value positive" id="contacts-with-email">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">With Spouse Info</div>
+                        <div class="metric-value neutral" id="contacts-with-spouse">0</div>
+                    </div>
+                </div>
+
+                <!-- Search and Export -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="contacts-search" placeholder="Search contacts..." style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 6px; min-width: 250px;">
+                        <select id="contacts-filter" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 6px;">
+                            <option value="all">All Clients</option>
+                            <option value="seller">Sellers Only</option>
+                            <option value="buyer">Buyers Only</option>
+                            <option value="has-phone">Has Phone</option>
+                            <option value="no-phone">Missing Phone</option>
+                            <option value="has-spouse">Has Spouse Info</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" onclick="exportContacts()">Export Contacts (CSV)</button>
+                    </div>
+                </div>
+
+                <!-- Contacts Table -->
+                <div class="card">
+                    <div class="card-body" style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                            <thead>
+                                <tr style="background: var(--gray-100); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--gray-200);">Name</th>
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--gray-200);">Type</th>
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--gray-200);">Phone</th>
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--gray-200);">Email</th>
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--gray-200);">Spouse/Partner</th>
+                                    <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--gray-200);">Community</th>
+                                    <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid var(--gray-200);">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contacts-table-body">
+                                <!-- Contacts will be rendered here by JavaScript -->
+                            </tbody>
+                        </table>
+                        <div id="contacts-empty" style="display: none; text-align: center; padding: 3rem; color: var(--gray-400);">
+                            No contacts found. Add clients in the Pipeline tab.
                         </div>
                     </div>
                 </div>
@@ -2806,14 +2879,44 @@
                     </div>
                 </div>
 
+                <!-- Backup & Restore (Prominent Section) -->
+                <div class="card" style="margin-top: 1.5rem; border: 2px solid var(--brand-primary);">
+                    <div class="card-header" style="background: var(--brand-primary-light);">
+                        <h3 style="color: var(--brand-primary);">Backup & Restore</h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1rem;">
+                            <strong>Important:</strong> Create regular backups to protect your data. Backup files can be restored at any time to recover your clients, contacts, and all settings.
+                        </p>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                            <button class="btn btn-primary" onclick="createBackup()" style="padding: 0.75rem 1.5rem;">
+                                Download Full Backup
+                            </button>
+                            <button class="btn btn-secondary" onclick="document.getElementById('restore-file').click()" style="padding: 0.75rem 1.5rem;">
+                                Restore from Backup
+                            </button>
+                            <input type="file" id="restore-file" accept=".json" style="display: none;" onchange="restoreBackup(event)">
+                        </div>
+                        <div style="background: var(--gray-100); padding: 1rem; border-radius: 8px; font-size: 0.8125rem;">
+                            <div style="font-weight: 600; margin-bottom: 0.5rem;">Data Storage:</div>
+                            <ul style="margin: 0; padding-left: 1.25rem; color: var(--gray-600);">
+                                <li><strong>Browser (localStorage):</strong> Saved instantly, but lost if you clear browser data</li>
+                                <li><strong>Supabase Cloud:</strong> Syncs automatically when online (shared with team)</li>
+                                <li><strong>Backup File:</strong> Download regularly and store safely for disaster recovery</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Data Management -->
                 <div class="card" style="margin-top: 1.5rem;">
                     <div class="card-header">
-                        <h3>Data Management</h3>
+                        <h3>Advanced Data Management</h3>
                     </div>
                     <div class="card-body">
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <button class="btn btn-secondary" onclick="exportData()">Export All Data</button>
+                            <button class="btn btn-secondary" onclick="exportData()">Export Raw JSON</button>
+                            <button class="btn btn-secondary" onclick="exportContacts()">Export Contacts (CSV)</button>
                             <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Import Data</button>
                             <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
                             <button class="btn btn-danger" onclick="resetData()">Reset All Data</button>

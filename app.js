@@ -1527,7 +1527,7 @@ function toggleClientTypeFields() {
     const titleEl = document.getElementById('seller-modal-title');
     const isEdit = document.getElementById('seller-id').value !== '';
     if (!isEdit) {
-        titleEl.textContent = isBuyer ? 'Add New Buyer' : 'Add New Seller';
+        titleEl.textContent = isBuyer ? 'Add Client (Buyer)' : 'Add Client (Seller)';
     }
 }
 
@@ -1536,7 +1536,7 @@ function editSeller(id) {
     if (!seller) return;
 
     const isBuyer = seller.type === 'buyer';
-    document.getElementById('seller-modal-title').textContent = isBuyer ? 'Edit Buyer' : 'Edit Seller';
+    document.getElementById('seller-modal-title').textContent = isBuyer ? 'Edit Client (Buyer)' : 'Edit Client (Seller)';
     document.getElementById('seller-id').value = seller.id;
     document.getElementById('seller-type').value = seller.type || 'seller';
     document.getElementById('seller-name').value = seller.name || '';
@@ -2682,10 +2682,240 @@ function initSocialMediaFilters() {
     }
 }
 
+// ===========================================
+// CONTACTS DIRECTORY
+// ===========================================
+
+let contactsSearchTerm = '';
+let contactsFilterType = 'all';
+
+function renderContacts() {
+    const tbody = document.getElementById('contacts-table-body');
+    const emptyEl = document.getElementById('contacts-empty');
+    if (!tbody) return;
+
+    let clients = appData.sellers || [];
+
+    // Apply search filter
+    if (contactsSearchTerm) {
+        const term = contactsSearchTerm.toLowerCase();
+        clients = clients.filter(c =>
+            (c.name || '').toLowerCase().includes(term) ||
+            (c.phone || '').toLowerCase().includes(term) ||
+            (c.email || '').toLowerCase().includes(term) ||
+            (c.spouseName || '').toLowerCase().includes(term) ||
+            (c.community || '').toLowerCase().includes(term)
+        );
+    }
+
+    // Apply type filter
+    if (contactsFilterType === 'seller') {
+        clients = clients.filter(c => c.type !== 'buyer');
+    } else if (contactsFilterType === 'buyer') {
+        clients = clients.filter(c => c.type === 'buyer');
+    } else if (contactsFilterType === 'has-phone') {
+        clients = clients.filter(c => c.phone);
+    } else if (contactsFilterType === 'no-phone') {
+        clients = clients.filter(c => !c.phone);
+    } else if (contactsFilterType === 'has-spouse') {
+        clients = clients.filter(c => c.spouseName);
+    }
+
+    // Sort by name
+    clients.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    if (clients.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = 'block';
+        return;
+    }
+
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    tbody.innerHTML = clients.map(c => {
+        const isBuyer = c.type === 'buyer';
+        const typeLabel = isBuyer ? 'Buyer' : 'Seller';
+        const typeBadge = isBuyer ? 'badge-buyer' : 'badge-seller';
+
+        return `
+            <tr style="border-bottom: 1px solid var(--gray-200);">
+                <td style="padding: 0.75rem; font-weight: 500;">${c.name || '-'}</td>
+                <td style="padding: 0.75rem;"><span class="badge ${typeBadge}">${typeLabel}</span></td>
+                <td style="padding: 0.75rem;">
+                    ${c.phone ? `<a href="tel:${c.phone}" style="color: var(--brand-primary); text-decoration: none;">${c.phone}</a>` : '<span style="color: var(--gray-400);">—</span>'}
+                </td>
+                <td style="padding: 0.75rem;">
+                    ${c.email ? `<a href="mailto:${c.email}" style="color: var(--brand-primary); text-decoration: none;">${c.email}</a>` : '<span style="color: var(--gray-400);">—</span>'}
+                </td>
+                <td style="padding: 0.75rem;">
+                    ${c.spouseName ? `
+                        <div style="font-weight: 500;">${c.spouseName}</div>
+                        ${c.spousePhone ? `<div style="font-size: 0.75rem;"><a href="tel:${c.spousePhone}" style="color: var(--brand-primary); text-decoration: none;">${c.spousePhone}</a></div>` : ''}
+                    ` : '<span style="color: var(--gray-400);">—</span>'}
+                </td>
+                <td style="padding: 0.75rem;">${c.community || '-'}</td>
+                <td style="padding: 0.75rem; text-align: center;">
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="viewClient('${c.id}')">View</button>
+                    <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="editSeller('${c.id}')">Edit</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updateContactStats() {
+    const clients = appData.sellers || [];
+
+    const total = clients.length;
+    const withPhone = clients.filter(c => c.phone).length;
+    const withEmail = clients.filter(c => c.email).length;
+    const withSpouse = clients.filter(c => c.spouseName).length;
+
+    const totalEl = document.getElementById('contacts-total');
+    const phoneEl = document.getElementById('contacts-with-phone');
+    const emailEl = document.getElementById('contacts-with-email');
+    const spouseEl = document.getElementById('contacts-with-spouse');
+
+    if (totalEl) totalEl.textContent = total;
+    if (phoneEl) phoneEl.textContent = withPhone;
+    if (emailEl) emailEl.textContent = withEmail;
+    if (spouseEl) spouseEl.textContent = withSpouse;
+}
+
+function exportContacts() {
+    const clients = appData.sellers || [];
+
+    if (clients.length === 0) {
+        alert('No contacts to export');
+        return;
+    }
+
+    // Create CSV content
+    const headers = ['Name', 'Type', 'Phone', 'Email', 'Current Address', 'Preferred Contact', 'Spouse Name', 'Spouse Phone', 'Spouse Email', 'Property/Community', 'Stage', 'Notes'];
+    const rows = clients.map(c => [
+        c.name || '',
+        c.type === 'buyer' ? 'Buyer' : 'Seller',
+        c.phone || '',
+        c.email || '',
+        c.currentAddress || '',
+        c.contactPref || '',
+        c.spouseName || '',
+        c.spousePhone || '',
+        c.spouseEmail || '',
+        c.community || '',
+        STAGE_LABELS[c.stage] || c.stage || '',
+        (c.notes || '').replace(/"/g, '""') // Escape quotes
+    ]);
+
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `contacts_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+}
+
+function initContactsTab() {
+    const searchInput = document.getElementById('contacts-search');
+    const filterSelect = document.getElementById('contacts-filter');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            contactsSearchTerm = e.target.value;
+            renderContacts();
+        });
+    }
+
+    if (filterSelect) {
+        filterSelect.addEventListener('change', (e) => {
+            contactsFilterType = e.target.value;
+            renderContacts();
+        });
+    }
+}
+
+// ===========================================
+// DATA BACKUP & RESTORE
+// ===========================================
+
+function createBackup() {
+    const backup = {
+        version: '1.0',
+        createdAt: new Date().toISOString(),
+        data: appData
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `bogen-2026-backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+
+    alert('Backup created successfully! Save this file in a safe location.');
+}
+
+function restoreBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const backup = JSON.parse(e.target.result);
+
+            if (!backup.data) {
+                alert('Invalid backup file format');
+                return;
+            }
+
+            if (!confirm('This will replace ALL current data with the backup. Are you sure?')) {
+                return;
+            }
+
+            // Merge backup data with current structure
+            appData = {
+                ...appData,
+                ...backup.data,
+                // Ensure arrays exist
+                sellers: backup.data.sellers || [],
+                deals: backup.data.deals || [],
+                activities: backup.data.activities || [],
+                leadSources: backup.data.leadSources || [],
+                leadSourceTouches: backup.data.leadSourceTouches || [],
+                socialPosts: backup.data.socialPosts || []
+            };
+
+            saveData();
+            renderDashboard();
+            renderPipeline();
+            renderLeadSources();
+            renderContacts();
+            renderSocialPosts();
+
+            alert('Backup restored successfully!');
+        } catch (err) {
+            alert('Error reading backup file: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    event.target.value = '';
+}
+
 // Call on DOMContentLoaded - add to existing init
 document.addEventListener('DOMContentLoaded', () => {
     initializeMobileNavigation();
     initSocialMediaFilters();
+    initContactsTab();
     renderSocialPosts();
     updateSocialStats();
+    renderContacts();
+    updateContactStats();
 });
