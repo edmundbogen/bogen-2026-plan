@@ -139,6 +139,81 @@ function hasTag(contact, tag) {
     return tags.includes(tag);
 }
 
+// Helper function to get lead sources (contacts with lead-source tag)
+function getLeadSources() {
+    return appData.sellers.filter(c => hasTag(c, 'lead-source'));
+}
+
+// Migration: Convert old leadSources array to contacts with lead-source tag
+async function migrateLeadSourcesToContacts() {
+    const oldSources = appData.leadSources || [];
+    if (oldSources.length === 0) return; // Nothing to migrate
+
+    // Check if migration already happened (look for flag in settings)
+    if (appData.settings.leadSourcesMigrated) return;
+
+    console.log(`Migrating ${oldSources.length} lead sources to contacts...`);
+
+    let migrated = 0;
+    for (const source of oldSources) {
+        // Check if this lead source already exists as a contact (by name match)
+        const existingContact = appData.sellers.find(c =>
+            c.name === source.name && hasTag(c, 'lead-source')
+        );
+
+        if (!existingContact) {
+            // Create new contact from lead source
+            const newContact = {
+                id: source.id, // Keep same ID so touch references still work
+                type: 'seller', // Default type for backward compat
+                tags: ['lead-source'],
+                name: source.name || '',
+                phone: source.phone || '',
+                email: source.email || '',
+                currentAddress: '',
+                contactPref: 'phone',
+                spouseName: '',
+                spousePhone: '',
+                spouseEmail: '',
+                // Lead source specific fields
+                leadSourceType: source.type || 'other',
+                company: source.company || '',
+                // Property fields (empty for lead sources)
+                address: '',
+                community: '',
+                value: 0,
+                timing: '',
+                stage: 'prospect',
+                pricing: '',
+                nextAction: '',
+                originator: 'edmund',
+                probability: 0,
+                closeDate: '',
+                notes: source.notes || '',
+                budgetMin: 0,
+                budgetMax: 0,
+                preapproval: '',
+                leadSourceId: null,
+                // Preserve timestamps
+                lastTouchDate: source.lastTouchDate || null,
+                createdAt: source.createdAt || new Date().toISOString()
+            };
+
+            appData.sellers.push(newContact);
+            migrated++;
+        }
+    }
+
+    // Mark migration as complete
+    appData.settings.leadSourcesMigrated = true;
+
+    // Save the migrated data
+    if (migrated > 0) {
+        console.log(`Migrated ${migrated} lead sources to contacts`);
+        await saveData();
+    }
+}
+
 const LEAD_SOURCE_TYPES = {
     'attorney': 'Attorney',
     'cpa': 'CPA/Accountant',
@@ -228,6 +303,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Add seed clients if they don't exist
     await seedClients();
+
+    // Migrate old lead sources to contacts (one-time migration)
+    await migrateLeadSourcesToContacts();
 
     checkAuth();
     initializeNavigation();
@@ -678,7 +756,7 @@ async function syncNow() {
     // Count local records
     const localClients = (appData.sellers || []).length;
     const localActivities = (appData.activities || []).length;
-    const localLeadSources = (appData.leadSources || []).length;
+    const localLeadSources = getLeadSources().length;
 
     // Fetch cloud record counts
     let cloudClients = 0;
@@ -695,7 +773,12 @@ async function syncNow() {
         if (cloudData && cloudData.data) {
             cloudClients = (cloudData.data.sellers || []).length;
             cloudActivities = (cloudData.data.activities || []).length;
-            cloudLeadSources = (cloudData.data.leadSources || []).length;
+            // Count lead sources from contacts or legacy array
+            const cloudSellers = cloudData.data.sellers || [];
+            cloudLeadSources = cloudSellers.filter(s => {
+                const tags = s.tags || [];
+                return tags.includes('lead-source');
+            }).length || (cloudData.data.leadSources || []).length;
         }
     } catch (err) {
         console.log('No existing cloud data or error fetching:', err);
@@ -1358,7 +1441,7 @@ function viewClient(id) {
     document.getElementById('client-detail-title').textContent = client.name || 'Contact Details';
 
     // Build info section
-    const leadSource = client.leadSourceId ? appData.leadSources.find(ls => ls.id === client.leadSourceId) : null;
+    const leadSource = client.leadSourceId ? getLeadSources().find(ls => ls.id === client.leadSourceId) : null;
 
     let infoHtml = `
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
@@ -1997,7 +2080,8 @@ function renderTeamGoals() {
 // ===========================================
 
 function renderLeadSources() {
-    const sources = appData.leadSources || [];
+    // Now use contacts with lead-source tag instead of separate leadSources array
+    const sources = getLeadSources();
     const now = new Date();
 
     // Calculate metrics with details for tooltips
@@ -2007,7 +2091,8 @@ function renderLeadSources() {
         ? sourceNames.join('\n') + (sources.length > 10 ? `\n...and ${sources.length - 10} more` : '')
         : 'No lead sources added';
 
-    const leadsFromReferrals = appData.sellers.filter(s => s.leadSourceId);
+    // Get contacts that were referred (excluding lead sources themselves)
+    const leadsFromReferrals = appData.sellers.filter(s => s.leadSourceId && !hasTag(s, 'lead-source'));
     const leadsCount = leadsFromReferrals.length;
     const leadsTooltip = leadsFromReferrals.length > 0
         ? leadsFromReferrals.slice(0, 10).map(c => {
@@ -2016,7 +2101,7 @@ function renderLeadSources() {
         }).join('\n') + (leadsFromReferrals.length > 10 ? `\n...and ${leadsFromReferrals.length - 10} more` : '')
         : 'No leads from referrals yet';
 
-    const closedClients = appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed');
+    const closedClients = appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed' && !hasTag(s, 'lead-source'));
     const closedFromReferrals = closedClients.length;
     const closedTooltip = closedClients.length > 0
         ? closedClients.slice(0, 10).map(c => {
@@ -2067,10 +2152,13 @@ function renderLeadSources() {
         });
 
         tbody.innerHTML = sorted.map(s => {
-            const leadsSent = appData.sellers.filter(c => c.leadSourceId === s.id).length;
-            const closedDeals = appData.sellers.filter(c => c.leadSourceId === s.id && c.stage === 'closed').length;
+            // Count referrals that came from this source (exclude lead sources themselves)
+            const leadsSent = appData.sellers.filter(c => c.leadSourceId === s.id && !hasTag(c, 'lead-source')).length;
+            const closedDeals = appData.sellers.filter(c => c.leadSourceId === s.id && c.stage === 'closed' && !hasTag(c, 'lead-source')).length;
             const daysSinceTouch = s.lastTouchDate ? Math.floor((now - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24)) : 999;
             const touchStatus = daysSinceTouch <= 14 ? 'success' : daysSinceTouch <= 30 ? 'warning' : 'danger';
+            // Use leadSourceType for the relationship type (with fallback to old 'type' field)
+            const sourceType = s.leadSourceType || s.type || 'other';
 
             return `
                 <tr>
@@ -2078,7 +2166,7 @@ function renderLeadSources() {
                         <strong>${s.name || 'Unknown'}</strong>
                         ${s.phone ? `<br><span style="font-size: 0.8125rem; color: var(--gray-500);">${s.phone}</span>` : ''}
                     </td>
-                    <td>${LEAD_SOURCE_TYPES[s.type] || s.type || '-'}</td>
+                    <td>${LEAD_SOURCE_TYPES[sourceType] || sourceType || '-'}</td>
                     <td>${s.company || '-'}</td>
                     <td><strong>${leadsSent}</strong></td>
                     <td><span class="badge ${closedDeals > 0 ? 'badge-success' : 'badge-gray'}">${closedDeals}</span></td>
@@ -2102,10 +2190,11 @@ function renderLeadSources() {
 
 function renderTopReferrers() {
     const container = document.getElementById('top-referrers-list');
+    const leadSources = getLeadSources();
 
-    // Calculate revenue per lead source
+    // Calculate revenue per lead source (exclude lead sources from the count)
     const sourceRevenue = {};
-    appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed').forEach(client => {
+    appData.sellers.filter(s => s.leadSourceId && s.stage === 'closed' && !hasTag(s, 'lead-source')).forEach(client => {
         const sourceId = client.leadSourceId;
         if (!sourceRevenue[sourceId]) {
             sourceRevenue[sourceId] = { deals: 0, revenue: 0 };
@@ -2114,10 +2203,10 @@ function renderTopReferrers() {
         sourceRevenue[sourceId].revenue += calculateNetToEdmund(client.value || 0, client.originator === 'edmund');
     });
 
-    // Sort by revenue
+    // Sort by revenue - now find source from contacts with lead-source tag
     const topSources = Object.entries(sourceRevenue)
         .map(([id, data]) => {
-            const source = appData.leadSources.find(s => s.id === id);
+            const source = leadSources.find(s => s.id === id);
             return { ...data, source };
         })
         .filter(s => s.source)
@@ -2129,19 +2218,22 @@ function renderTopReferrers() {
         return;
     }
 
-    container.innerHTML = topSources.map((s, i) => `
-        <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: ${i === 0 ? 'var(--gold-light)' : 'var(--gray-100)'}; border-radius: 6px;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: ${i === 0 ? 'var(--gold-dark)' : 'var(--gray-400)'}; width: 2rem;">#${i + 1}</div>
-            <div style="flex: 1;">
-                <strong>${s.source.name}</strong>
-                <span style="color: var(--gray-500); font-size: 0.875rem;"> - ${LEAD_SOURCE_TYPES[s.source.type] || s.source.type}</span>
+    container.innerHTML = topSources.map((s, i) => {
+        const sourceType = s.source.leadSourceType || s.source.type || 'other';
+        return `
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: ${i === 0 ? 'var(--gold-light)' : 'var(--gray-100)'}; border-radius: 6px;">
+                <div style="font-size: 1.5rem; font-weight: 700; color: ${i === 0 ? 'var(--gold-dark)' : 'var(--gray-400)'}; width: 2rem;">#${i + 1}</div>
+                <div style="flex: 1;">
+                    <strong>${s.source.name}</strong>
+                    <span style="color: var(--gray-500); font-size: 0.875rem;"> - ${LEAD_SOURCE_TYPES[sourceType] || sourceType}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; color: var(--success);">${formatCurrency(s.revenue)}</div>
+                    <div style="font-size: 0.75rem; color: var(--gray-500);">${s.deals} deal${s.deals !== 1 ? 's' : ''}</div>
+                </div>
             </div>
-            <div style="text-align: right;">
-                <div style="font-weight: 600; color: var(--success);">${formatCurrency(s.revenue)}</div>
-                <div style="font-size: 0.75rem; color: var(--gray-500);">${s.deals} deal${s.deals !== 1 ? 's' : ''}</div>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function openAddLeadSourceModal() {
@@ -2152,13 +2244,15 @@ function openAddLeadSourceModal() {
 }
 
 function editLeadSource(id) {
-    const source = appData.leadSources.find(s => s.id === id);
+    // Find source from contacts with lead-source tag
+    const source = getLeadSources().find(s => s.id === id);
     if (!source) return;
 
     document.getElementById('lead-source-modal-title').textContent = 'Edit Lead Source';
     document.getElementById('lead-source-id').value = source.id;
     document.getElementById('lead-source-name').value = source.name || '';
-    document.getElementById('lead-source-type').value = source.type || 'other';
+    // Use leadSourceType field (with fallback to old type field for migration)
+    document.getElementById('lead-source-type').value = source.leadSourceType || source.type || 'other';
     document.getElementById('lead-source-company').value = source.company || '';
     document.getElementById('lead-source-phone').value = source.phone || '';
     document.getElementById('lead-source-email').value = source.email || '';
@@ -2171,30 +2265,63 @@ function saveLeadSource() {
     const id = document.getElementById('lead-source-id').value || generateId();
     const isNew = !document.getElementById('lead-source-id').value;
 
-    const source = {
+    // Find existing contact if editing
+    const existingContact = appData.sellers.find(s => s.id === id);
+
+    // Create contact with lead-source tag
+    const contact = {
         id,
+        type: 'seller', // Default for backward compat
+        tags: existingContact?.tags || ['lead-source'],
         name: document.getElementById('lead-source-name').value,
-        type: document.getElementById('lead-source-type').value,
-        company: document.getElementById('lead-source-company').value,
         phone: document.getElementById('lead-source-phone').value,
         email: document.getElementById('lead-source-email').value,
+        currentAddress: existingContact?.currentAddress || '',
+        contactPref: existingContact?.contactPref || 'phone',
+        spouseName: existingContact?.spouseName || '',
+        spousePhone: existingContact?.spousePhone || '',
+        spouseEmail: existingContact?.spouseEmail || '',
+        // Lead source specific fields
+        leadSourceType: document.getElementById('lead-source-type').value,
+        company: document.getElementById('lead-source-company').value,
+        // Property fields (preserve if exists, empty otherwise)
+        address: existingContact?.address || '',
+        community: existingContact?.community || '',
+        value: existingContact?.value || 0,
+        timing: existingContact?.timing || '',
+        stage: existingContact?.stage || 'prospect',
+        pricing: existingContact?.pricing || '',
+        nextAction: existingContact?.nextAction || '',
+        originator: existingContact?.originator || 'edmund',
+        probability: existingContact?.probability || 0,
+        closeDate: existingContact?.closeDate || '',
         notes: document.getElementById('lead-source-notes').value,
-        lastTouchDate: isNew ? null : (appData.leadSources.find(s => s.id === id)?.lastTouchDate || null),
-        createdAt: isNew ? new Date().toISOString() : (appData.leadSources.find(s => s.id === id)?.createdAt || new Date().toISOString())
+        budgetMin: existingContact?.budgetMin || 0,
+        budgetMax: existingContact?.budgetMax || 0,
+        preapproval: existingContact?.preapproval || '',
+        leadSourceId: existingContact?.leadSourceId || null,
+        lastTouchDate: isNew ? null : (existingContact?.lastTouchDate || null),
+        createdAt: isNew ? new Date().toISOString() : (existingContact?.createdAt || new Date().toISOString())
     };
 
+    // Ensure lead-source tag is present
+    if (!contact.tags.includes('lead-source')) {
+        contact.tags.push('lead-source');
+    }
+
     if (isNew) {
-        appData.leadSources.push(source);
+        appData.sellers.push(contact);
     } else {
-        const idx = appData.leadSources.findIndex(s => s.id === id);
+        const idx = appData.sellers.findIndex(s => s.id === id);
         if (idx !== -1) {
-            appData.leadSources[idx] = source;
+            appData.sellers[idx] = contact;
         }
     }
 
     saveData();
     closeModal('lead-source-modal');
     renderLeadSources();
+    renderContacts();
     populateLeadSourceDropdown();
 }
 
@@ -2211,7 +2338,7 @@ function saveLeadSourceTouch() {
 
     const touch = {
         id: generateId(),
-        leadSourceId: sourceId,
+        leadSourceId: sourceId, // Now references contact ID
         type: document.getElementById('touch-type').value,
         date: document.getElementById('touch-date').value,
         notes: document.getElementById('touch-notes').value,
@@ -2220,26 +2347,31 @@ function saveLeadSourceTouch() {
 
     appData.leadSourceTouches.push(touch);
 
-    // Update last touch date on source
-    const source = appData.leadSources.find(s => s.id === sourceId);
-    if (source) {
-        source.lastTouchDate = touch.date;
+    // Update last touch date on contact (lead source)
+    const contact = appData.sellers.find(s => s.id === sourceId);
+    if (contact) {
+        contact.lastTouchDate = touch.date;
     }
 
     saveData();
     closeModal('lead-source-touch-modal');
     renderLeadSources();
+    renderContacts();
 }
 
 function populateLeadSourceDropdown() {
     const dropdown = document.getElementById('seller-lead-source');
     if (!dropdown) return;
 
-    const sources = appData.leadSources || [];
+    // Now use contacts with lead-source tag
+    const sources = getLeadSources();
 
     // Keep the first "no referral" option and rebuild the rest
     dropdown.innerHTML = '<option value="">-- No referral / Direct --</option>' +
-        sources.map(s => `<option value="${s.id}">${s.name} (${LEAD_SOURCE_TYPES[s.type] || s.type})</option>`).join('');
+        sources.map(s => {
+            const sourceType = s.leadSourceType || s.type || 'other';
+            return `<option value="${s.id}">${s.name} (${LEAD_SOURCE_TYPES[sourceType] || sourceType})</option>`;
+        }).join('');
 }
 
 // ===========================================
