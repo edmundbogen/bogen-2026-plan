@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edmund Bogen Team — 2026 Operating Plan</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gold: #C9A962;
-            --gold-light: #E5D4A1;
-            --gold-light-text: #F0E4C4; /* Higher contrast gold for text on navy (6.5:1) */
-            --gold-dark: #9A7B3D;
-            --navy: #1A2B4A;
-            --navy-light: #2D4066;
-            --navy-dark: #0F1A2E;
+            /* Edmund Bogen Brand Colors */
+            --brand-primary: #00a8e1;      /* Bright Blue - accent color */
+            --brand-primary-dark: #0090c4; /* Darker blue for hover states */
+            --brand-primary-light: #e6f7fc; /* Light blue for backgrounds */
+            --navy: #1a3e5c;               /* Brand navy - primary background */
+            --navy-light: #2a5275;
+            --navy-dark: #0f2a42;
             --white: #FFFFFF;
-            --off-white: #F8F7F4;
-            --gray-100: #F5F5F5;
-            --gray-200: #E8E8E8;
+            --off-white: #f4f4f4;
+            --gray-100: #f4f4f4;
+            --gray-200: #e8e8e8;
             --gray-300: #D1D1D1;
             --gray-400: #9CA3AF;
-            --gray-500: #6B7280; /* Minimum for text - 7.8:1 contrast on white */
+            --gray-500: #6B7280;
             --gray-600: #4B5563;
             --gray-700: #374151;
             --success: #059669;
@@ -29,8 +29,8 @@
             --warning-light: #FEF3C7;
             --danger: #DC2626;
             --danger-light: #FEE2E2;
-            --info: #2563EB;
-            --info-light: #DBEAFE;
+            --info: #00a8e1;               /* Match brand blue */
+            --info-light: #e6f7fc;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
@@ -51,8 +51,10 @@
         }
 
         h1, h2, h3, h4 {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-weight: 600;
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
 
         /* Login Screen */
@@ -74,19 +76,22 @@
         }
 
         .login-logo {
-            color: var(--gold);
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 600;
+            color: var(--white);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            font-weight: 300;
             margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
         }
 
         .login-subtitle {
-            color: var(--gold-light-text);
-            font-size: 1rem;
+            color: var(--brand-primary);
+            font-size: 0.875rem;
             margin-bottom: 2rem;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
+            font-weight: 500;
         }
 
         .login-box {
@@ -132,8 +137,8 @@
         .form-group select:focus,
         .form-group input:focus {
             outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.1);
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(0, 168, 225, 0.15);
         }
 
         .btn {
@@ -155,21 +160,24 @@
         }
 
         .btn-primary {
-            background: var(--gold);
-            color: var(--navy-dark);
+            background: var(--brand-primary);
+            color: var(--white);
             width: 100%;
-            box-shadow: 0 2px 4px rgba(201, 169, 98, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 168, 225, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
         }
 
         .btn-primary:hover {
-            background: var(--gold-dark);
-            box-shadow: 0 4px 8px rgba(201, 169, 98, 0.4);
+            background: var(--brand-primary-dark);
+            box-shadow: 0 4px 8px rgba(0, 168, 225, 0.4);
             transform: translateY(-1px);
         }
 
         .btn-primary:active {
             transform: translateY(0) scale(0.98);
-            box-shadow: 0 1px 2px rgba(201, 169, 98, 0.3);
+            box-shadow: 0 1px 2px rgba(0, 168, 225, 0.3);
         }
 
         .btn-secondary {
@@ -238,23 +246,27 @@
         }
 
         .header-logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--gold);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 300;
+            color: var(--white);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
         }
 
         .header-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--gray-500);
+            width: 3px;
+            height: 28px;
+            background: var(--brand-primary);
         }
 
         .header-title {
-            font-size: 0.875rem;
-            color: var(--gold-light-text);
+            font-size: 0.75rem;
+            color: var(--white);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
+            font-weight: 400;
+            opacity: 0.9;
         }
 
         .header-user {
@@ -274,8 +286,9 @@
 
         .user-role {
             font-size: 0.75rem;
-            color: var(--gold-light-text);
+            color: var(--brand-primary);
             text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .logout-btn {
@@ -310,14 +323,20 @@
 
         .nav-item {
             padding: 1rem 1.5rem;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             font-weight: 500;
             color: var(--gray-500);
             text-decoration: none;
-            border-bottom: 2px solid transparent;
+            border-bottom: 3px solid transparent;
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
         }
 
         .nav-item:hover {
@@ -326,7 +345,7 @@
 
         .nav-item.active {
             color: var(--navy);
-            border-bottom-color: var(--gold);
+            border-bottom-color: var(--brand-primary);
         }
 
         .nav-item.hidden {
@@ -434,7 +453,7 @@
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            font-family: 'Playfair Display', serif;
+            font-family: 'Montserrat', sans-serif;
         }
 
         .metric-value.positive { color: var(--success); }
@@ -601,7 +620,7 @@
 
         .progress-fill {
             height: 100%;
-            background: var(--gold);
+            background: var(--brand-primary);
             border-radius: 4px;
             transition: width 0.3s;
         }
@@ -683,7 +702,7 @@
         }
 
         .calc-result h4 {
-            color: var(--gold);
+            color: var(--brand-primary);
             margin-bottom: 1.5rem;
             font-size: 1.125rem;
         }
@@ -702,7 +721,7 @@
         .calc-line.total {
             font-weight: 700;
             font-size: 1.25rem;
-            border-top: 2px solid var(--gold);
+            border-top: 2px solid var(--brand-primary);
             margin-top: 1rem;
             padding-top: 1rem;
         }
@@ -716,7 +735,7 @@
         }
 
         .calc-line .value.highlight {
-            color: var(--gold);
+            color: var(--brand-primary);
         }
 
         /* Pipeline Stages */
@@ -940,7 +959,7 @@
         .quarter-stat-value {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--gold);
+            color: var(--brand-primary);
         }
 
         .quarter-stat-label {
@@ -959,7 +978,7 @@
         }
 
         .seller-card:hover {
-            border-color: var(--gold);
+            border-color: var(--brand-primary);
             box-shadow: var(--shadow-md);
         }
 
@@ -1095,7 +1114,7 @@
         }
 
         .revenue-item.highlight {
-            background: var(--gold);
+            background: var(--brand-primary);
             color: var(--navy-dark);
         }
 
@@ -1114,7 +1133,7 @@
         .revenue-item .value {
             font-size: 1.5rem;
             font-weight: 700;
-            font-family: 'Playfair Display', serif;
+            font-family: 'Montserrat', sans-serif;
         }
 
         /* ==========================================
@@ -1136,7 +1155,7 @@
 
         /* Enhanced focus indicators for keyboard navigation */
         :focus-visible {
-            outline: 3px solid var(--gold);
+            outline: 3px solid var(--brand-primary);
             outline-offset: 2px;
         }
 
@@ -1154,9 +1173,9 @@
         .logout-btn:focus-visible,
         .modal-close:focus-visible,
         .checklist-checkbox:focus-visible {
-            outline: 3px solid var(--gold);
+            outline: 3px solid var(--brand-primary);
             outline-offset: 2px;
-            box-shadow: 0 0 0 6px rgba(201, 169, 98, 0.2);
+            box-shadow: 0 0 0 6px rgba(0, 168, 225, 0.2);
         }
 
         /* Skip to main content link (hidden until focused) */
@@ -1166,7 +1185,7 @@
             left: 50%;
             transform: translateX(-50%);
             background: var(--navy);
-            color: var(--gold);
+            color: var(--brand-primary);
             padding: 1rem 2rem;
             z-index: 1001;
             border-radius: 0 0 8px 8px;
@@ -1291,7 +1310,7 @@
 
         .mobile-nav-role {
             font-size: 0.75rem;
-            color: var(--gold-light-text);
+            color: var(--brand-primary);
             text-transform: uppercase;
         }
 
@@ -1319,8 +1338,8 @@
         }
 
         .mobile-nav-item.active {
-            background: var(--gold-light);
-            border-left-color: var(--gold);
+            background: var(--brand-primary-light);
+            border-left-color: var(--brand-primary);
             color: var(--navy);
             font-weight: 600;
         }
@@ -1497,7 +1516,7 @@
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
                         <div id="sync-status" role="status" aria-live="polite" aria-label="Sync status" style="font-size: 0.75rem;"><span style="color: var(--gray-500);">Offline</span><span class="sr-only"> - Data saved locally only</span></div>
                         <button id="sync-now-btn" onclick="syncNow()" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; background: var(--navy-light); color: white; border: none; border-radius: 4px; cursor: pointer;">Sync Now</button>
-                        <button onclick="exportData()" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; background: var(--gold-dark); color: white; border: none; border-radius: 4px; cursor: pointer;">Export</button>
+                        <button onclick="exportData()" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; background: var(--brand-primary-dark); color: white; border: none; border-radius: 4px; cursor: pointer;">Export</button>
                     </div>
                     <div class="user-info">
                         <div class="user-name" id="current-user-name">Edmund Bogen</div>
