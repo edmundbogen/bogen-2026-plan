@@ -603,14 +603,14 @@ function updateSyncStatusUI() {
     if (!indicator) return;
 
     const statusConfig = {
-        'online': { text: 'Synced', color: 'var(--success)', icon: '☁️' },
-        'offline': { text: 'Offline', color: 'var(--gray-500)', icon: '💾' },
-        'syncing': { text: 'Syncing...', color: 'var(--warning)', icon: '🔄' },
-        'error': { text: 'Sync Error', color: 'var(--danger)', icon: '⚠️' }
+        'online': { text: 'Synced', color: 'var(--success)', srText: 'Data synced to cloud' },
+        'offline': { text: 'Offline', color: 'var(--gray-500)', srText: 'Data saved locally only' },
+        'syncing': { text: 'Syncing...', color: 'var(--warning)', srText: 'Synchronizing data with cloud' },
+        'error': { text: 'Sync Error', color: 'var(--danger)', srText: 'Failed to sync data to cloud' }
     };
 
     const config = statusConfig[syncStatus] || statusConfig.offline;
-    indicator.innerHTML = `<span style="color: ${config.color};">${config.icon} ${config.text}</span>`;
+    indicator.innerHTML = `<span style="color: ${config.color};">${config.text}</span><span class="sr-only"> - ${config.srText}</span>`;
 }
 
 async function syncNow() {
@@ -727,6 +727,12 @@ function showApp() {
     document.getElementById('current-user-name').textContent = currentUser.name;
     document.getElementById('current-user-role').textContent = currentUser.displayRole;
 
+    // Update mobile nav user info
+    const mobileUserName = document.getElementById('mobile-user-name');
+    const mobileUserRole = document.getElementById('mobile-user-role');
+    if (mobileUserName) mobileUserName.textContent = currentUser.name;
+    if (mobileUserRole) mobileUserRole.textContent = currentUser.displayRole;
+
     // Add role class to body for CSS visibility control
     document.body.classList.remove('role-admin', 'role-agent', 'role-ops');
     document.body.classList.add(`role-${currentUser.role}`);
@@ -734,15 +740,19 @@ function showApp() {
     // Handle role-based nav visibility
     const navOps = document.getElementById('nav-ops');
     const navSettings = document.getElementById('nav-settings');
+    const mobileNavOps = document.getElementById('mobile-nav-ops');
+    const mobileNavSettings = document.getElementById('mobile-nav-settings');
 
     // Ops page visible to admin and ops
     if (currentUser.role !== 'admin' && currentUser.role !== 'ops') {
         navOps.classList.add('hidden');
+        if (mobileNavOps) mobileNavOps.classList.add('hidden');
     }
 
     // Settings only for admin
     if (currentUser.role !== 'admin') {
         navSettings.classList.add('hidden');
+        if (mobileNavSettings) mobileNavSettings.classList.add('hidden');
     }
 
     // Load settings into form if admin
@@ -773,13 +783,47 @@ function initializeNavigation() {
 }
 
 function switchPage(pageId) {
-    // Update nav
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+    // Update desktop nav and ARIA states
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active');
+        n.setAttribute('aria-selected', 'false');
+    });
+    const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if (activeNav) {
+        activeNav.classList.add('active');
+        activeNav.setAttribute('aria-selected', 'true');
+    }
+
+    // Update mobile nav state
+    document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+    const activeMobileNav = document.querySelector(`.mobile-nav-item[data-page="${pageId}"]`);
+    if (activeMobileNav) {
+        activeMobileNav.classList.add('active');
+    }
 
     // Update content
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${pageId}`).classList.add('active');
+
+    // Announce page change to screen readers
+    const pageTitle = document.querySelector(`#page-${pageId} h1`);
+    if (pageTitle) {
+        // Use a live region to announce
+        const announcer = document.getElementById('sr-announcer') || createSrAnnouncer();
+        announcer.textContent = `${pageTitle.textContent} page`;
+    }
+}
+
+// Create a screen reader announcer element
+function createSrAnnouncer() {
+    const announcer = document.createElement('div');
+    announcer.id = 'sr-announcer';
+    announcer.setAttribute('role', 'status');
+    announcer.setAttribute('aria-live', 'polite');
+    announcer.setAttribute('aria-atomic', 'true');
+    announcer.className = 'sr-only';
+    document.body.appendChild(announcer);
+    return announcer;
 }
 
 // ===========================================
@@ -2129,5 +2173,66 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        closeMobileMenu();
     }
+});
+
+// ===========================================
+// MOBILE NAVIGATION
+// ===========================================
+
+function toggleMobileMenu() {
+    const btn = document.getElementById('mobile-menu-btn');
+    const nav = document.getElementById('mobile-nav');
+    const overlay = document.getElementById('mobile-nav-overlay');
+
+    const isOpen = nav.classList.contains('active');
+
+    if (isOpen) {
+        closeMobileMenu();
+    } else {
+        btn.classList.add('active');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-label', 'Close navigation menu');
+        nav.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeMobileMenu() {
+    const btn = document.getElementById('mobile-menu-btn');
+    const nav = document.getElementById('mobile-nav');
+    const overlay = document.getElementById('mobile-nav-overlay');
+
+    if (btn) {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-label', 'Open navigation menu');
+    }
+    if (nav) nav.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+}
+
+// Initialize mobile navigation
+function initializeMobileNavigation() {
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+
+            // Update mobile nav active state
+            document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+            item.classList.add('active');
+
+            // Switch page
+            switchPage(page);
+
+            // Close mobile menu
+            closeMobileMenu();
+        });
+    });
+}
+
+// Call on DOMContentLoaded - add to existing init
+document.addEventListener('DOMContentLoaded', () => {
+    initializeMobileNavigation();
 });

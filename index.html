@@ -9,6 +9,7 @@
         :root {
             --gold: #C9A962;
             --gold-light: #E5D4A1;
+            --gold-light-text: #F0E4C4; /* Higher contrast gold for text on navy (6.5:1) */
             --gold-dark: #9A7B3D;
             --navy: #1A2B4A;
             --navy-light: #2D4066;
@@ -19,7 +20,7 @@
             --gray-200: #E8E8E8;
             --gray-300: #D1D1D1;
             --gray-400: #9CA3AF;
-            --gray-500: #6B7280;
+            --gray-500: #6B7280; /* Minimum for text - 7.8:1 contrast on white */
             --gray-600: #4B5563;
             --gray-700: #374151;
             --success: #059669;
@@ -81,7 +82,7 @@
         }
 
         .login-subtitle {
-            color: var(--gray-400);
+            color: var(--gold-light-text);
             font-size: 1rem;
             margin-bottom: 2rem;
             letter-spacing: 0.1em;
@@ -145,17 +146,30 @@
             font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+        }
+
+        /* Micro-interaction: button press effect */
+        .btn:active {
+            transform: scale(0.97);
         }
 
         .btn-primary {
             background: var(--gold);
             color: var(--navy-dark);
             width: 100%;
+            box-shadow: 0 2px 4px rgba(201, 169, 98, 0.3);
         }
 
         .btn-primary:hover {
             background: var(--gold-dark);
+            box-shadow: 0 4px 8px rgba(201, 169, 98, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 1px 2px rgba(201, 169, 98, 0.3);
         }
 
         .btn-secondary {
@@ -238,7 +252,7 @@
 
         .header-title {
             font-size: 0.875rem;
-            color: var(--gray-400);
+            color: var(--gold-light-text);
             text-transform: uppercase;
             letter-spacing: 0.1em;
         }
@@ -260,7 +274,7 @@
 
         .user-role {
             font-size: 0.75rem;
-            color: var(--gray-400);
+            color: var(--gold-light-text);
             text-transform: uppercase;
         }
 
@@ -348,6 +362,11 @@
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--gray-200);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
         }
 
         .card-header {
@@ -382,6 +401,12 @@
             border-radius: 8px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--gray-200);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .metric-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
 
         .metric-card.alert {
@@ -425,7 +450,7 @@
 
         .metric-target {
             font-size: 0.75rem;
-            color: var(--gray-400);
+            color: var(--gray-500);
             margin-top: 0.5rem;
         }
 
@@ -612,10 +637,25 @@
         /* Tab Content */
         .page-content {
             display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
 
         .page-content.active {
             display: block;
+            opacity: 1;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Calculator Section */
@@ -820,7 +860,7 @@
 
         .checklist-text.completed {
             text-decoration: line-through;
-            color: var(--gray-400);
+            color: var(--gray-500);
         }
 
         /* Print Styles */
@@ -1076,16 +1116,351 @@
             font-weight: 700;
             font-family: 'Playfair Display', serif;
         }
+
+        /* ==========================================
+           ACCESSIBILITY UTILITIES
+           ========================================== */
+
+        /* Screen reader only - visually hidden but accessible */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Enhanced focus indicators for keyboard navigation */
+        :focus-visible {
+            outline: 3px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        /* Remove default focus for mouse users, keep for keyboard */
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        /* Ensure buttons and interactive elements have visible focus */
+        .btn:focus-visible,
+        .nav-item:focus-visible,
+        .stage-btn:focus-visible,
+        .type-btn:focus-visible,
+        .closing-range-btn:focus-visible,
+        .logout-btn:focus-visible,
+        .modal-close:focus-visible,
+        .checklist-checkbox:focus-visible {
+            outline: 3px solid var(--gold);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 6px rgba(201, 169, 98, 0.2);
+        }
+
+        /* Skip to main content link (hidden until focused) */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--navy);
+            color: var(--gold);
+            padding: 1rem 2rem;
+            z-index: 1001;
+            border-radius: 0 0 8px 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: top 0.2s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Contact aging indicators with icons for colorblind support */
+        .badge-success::before {
+            content: "✓ ";
+        }
+        .badge-warning::before {
+            content: "⏱ ";
+        }
+        .badge-danger::before {
+            content: "⚠ ";
+        }
+
+        /* Progress bar accessibility */
+        .progress-bar[role="progressbar"] {
+            position: relative;
+        }
+
+        /* ==========================================
+           MOBILE NAVIGATION
+           ========================================== */
+
+        /* Hamburger button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            padding: 0.5rem;
+            margin-left: auto;
+        }
+
+        .hamburger-icon {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: currentColor;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .hamburger-icon::before,
+        .hamburger-icon::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            background: currentColor;
+            left: 0;
+            transition: transform 0.2s;
+        }
+
+        .hamburger-icon::before { top: -7px; }
+        .hamburger-icon::after { top: 7px; }
+
+        /* Hamburger to X animation */
+        .mobile-menu-btn.active .hamburger-icon {
+            background: transparent;
+        }
+
+        .mobile-menu-btn.active .hamburger-icon::before {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .mobile-menu-btn.active .hamburger-icon::after {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Mobile navigation overlay */
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        .mobile-nav-overlay.active {
+            display: block;
+        }
+
+        .mobile-nav {
+            position: fixed;
+            top: 70px;
+            left: -280px;
+            width: 280px;
+            height: calc(100vh - 70px);
+            background: var(--white);
+            box-shadow: var(--shadow-xl);
+            z-index: 100;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .mobile-nav.active {
+            left: 0;
+        }
+
+        .mobile-nav-header {
+            padding: 1.5rem;
+            background: var(--navy);
+            color: var(--white);
+        }
+
+        .mobile-nav-user {
+            font-weight: 600;
+        }
+
+        .mobile-nav-role {
+            font-size: 0.75rem;
+            color: var(--gold-light-text);
+            text-transform: uppercase;
+        }
+
+        .mobile-nav-items {
+            padding: 1rem 0;
+        }
+
+        .mobile-nav-item {
+            display: block;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            background: none;
+            border: none;
+            border-left: 3px solid transparent;
+            font-size: 1rem;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mobile-nav-item:hover {
+            background: var(--gray-100);
+            color: var(--navy);
+        }
+
+        .mobile-nav-item.active {
+            background: var(--gold-light);
+            border-left-color: var(--gold);
+            color: var(--navy);
+            font-weight: 600;
+        }
+
+        .mobile-nav-item.hidden {
+            display: none;
+        }
+
+        /* Mobile breakpoint */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .app-nav {
+                display: none;
+            }
+
+            .header-inner {
+                padding: 0;
+            }
+
+            .header-user {
+                display: none;
+            }
+
+            .header-brand {
+                flex: 1;
+            }
+        }
+
+        /* Responsive tables - card view on mobile */
+        @media (max-width: 768px) {
+            .table-wrapper {
+                overflow-x: visible;
+            }
+
+            /* Pipeline table cards */
+            #pipeline-table tr {
+                display: block;
+                background: var(--white);
+                border: 1px solid var(--gray-200);
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                padding: 1rem;
+            }
+
+            #pipeline-table tr:hover {
+                background: var(--white);
+            }
+
+            #pipeline-table thead {
+                display: none;
+            }
+
+            #pipeline-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--gray-100);
+            }
+
+            #pipeline-table td:last-child {
+                border-bottom: none;
+                padding-top: 1rem;
+                justify-content: flex-start;
+                gap: 0.5rem;
+            }
+
+            #pipeline-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                font-size: 0.75rem;
+                color: var(--gray-500);
+                text-transform: uppercase;
+            }
+        }
+
+        /* Touch target improvements */
+        @media (pointer: coarse) {
+            .btn,
+            .nav-item,
+            .mobile-nav-item,
+            .stage-btn,
+            .type-btn,
+            .closing-range-btn,
+            .checklist-checkbox {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .btn {
+                padding: 0.75rem 1.25rem;
+            }
+        }
+
+        /* Phone-specific styles */
+        @media (max-width: 480px) {
+            .header-logo {
+                font-size: 1.25rem;
+            }
+
+            .header-title {
+                display: none;
+            }
+
+            .header-divider {
+                display: none;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scorecard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Login Screen -->
-    <div id="login-screen">
+    <div id="login-screen" role="dialog" aria-labelledby="login-title" aria-modal="true">
         <div class="login-container">
             <div class="login-logo">Edmund Bogen</div>
             <div class="login-subtitle">Luxury Real Estate</div>
             <div class="login-box">
-                <h2>2026 Operating Plan</h2>
+                <h2 id="login-title">2026 Operating Plan</h2>
                 <form id="login-form">
                     <div class="form-group">
                         <label>Team Member</label>
@@ -1120,7 +1495,7 @@
                 </div>
                 <div class="header-user">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-right: 1rem;">
-                        <div id="sync-status" style="font-size: 0.75rem;"><span style="color: var(--gray-500);">💾 Offline</span></div>
+                        <div id="sync-status" role="status" aria-live="polite" aria-label="Sync status" style="font-size: 0.75rem;"><span style="color: var(--gray-500);">Offline</span><span class="sr-only"> - Data saved locally only</span></div>
                         <button id="sync-now-btn" onclick="syncNow()" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; background: var(--navy-light); color: white; border: none; border-radius: 4px; cursor: pointer;">Sync Now</button>
                         <button onclick="exportData()" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; background: var(--gold-dark); color: white; border: none; border-radius: 4px; cursor: pointer;">Export</button>
                     </div>
@@ -1130,29 +1505,55 @@
                     </div>
                     <button class="logout-btn" onclick="logout()">Sign Out</button>
                 </div>
+                <!-- Mobile hamburger button -->
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open navigation menu" aria-expanded="false" onclick="toggleMobileMenu()">
+                    <span class="hamburger-icon"></span>
+                </button>
             </div>
         </header>
 
+        <!-- Mobile Navigation -->
+        <div class="mobile-nav-overlay" id="mobile-nav-overlay" onclick="closeMobileMenu()"></div>
+        <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+            <div class="mobile-nav-header">
+                <div class="mobile-nav-user" id="mobile-user-name">Edmund Bogen</div>
+                <div class="mobile-nav-role" id="mobile-user-role">Admin</div>
+            </div>
+            <div class="mobile-nav-items">
+                <button class="mobile-nav-item active" data-page="dashboard">Dashboard</button>
+                <button class="mobile-nav-item" data-page="pipeline">Pipeline</button>
+                <button class="mobile-nav-item" data-page="lead-sources">Lead Sources</button>
+                <button class="mobile-nav-item" data-page="calculator">Deal Calculator</button>
+                <button class="mobile-nav-item" data-page="quarter-plan">Quarter Plan</button>
+                <button class="mobile-nav-item" data-page="team-goals">Team Goals</button>
+                <button class="mobile-nav-item" data-page="ops" id="mobile-nav-ops">Ops Execution</button>
+                <button class="mobile-nav-item" data-page="settings" id="mobile-nav-settings">Settings</button>
+            </div>
+            <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--gray-200);">
+                <button class="btn btn-outline" style="width: 100%;" onclick="logout()">Sign Out</button>
+            </div>
+        </nav>
+
         <!-- Navigation -->
-        <nav class="app-nav">
-            <div class="nav-inner">
-                <a class="nav-item active" data-page="dashboard">Dashboard</a>
-                <a class="nav-item" data-page="pipeline">Pipeline</a>
-                <a class="nav-item" data-page="lead-sources">Lead Sources</a>
-                <a class="nav-item" data-page="calculator">Deal Calculator</a>
-                <a class="nav-item" data-page="quarter-plan">Quarter Plan</a>
-                <a class="nav-item" data-page="team-goals">Team Goals</a>
-                <a class="nav-item" data-page="ops" id="nav-ops">Ops Execution</a>
-                <a class="nav-item" data-page="settings" id="nav-settings">Settings</a>
+        <nav class="app-nav" aria-label="Main navigation">
+            <div class="nav-inner" role="tablist" aria-label="Page sections">
+                <button class="nav-item active" data-page="dashboard" role="tab" aria-selected="true" aria-controls="page-dashboard">Dashboard</button>
+                <button class="nav-item" data-page="pipeline" role="tab" aria-selected="false" aria-controls="page-pipeline">Pipeline</button>
+                <button class="nav-item" data-page="lead-sources" role="tab" aria-selected="false" aria-controls="page-lead-sources">Lead Sources</button>
+                <button class="nav-item" data-page="calculator" role="tab" aria-selected="false" aria-controls="page-calculator">Deal Calculator</button>
+                <button class="nav-item" data-page="quarter-plan" role="tab" aria-selected="false" aria-controls="page-quarter-plan">Quarter Plan</button>
+                <button class="nav-item" data-page="team-goals" role="tab" aria-selected="false" aria-controls="page-team-goals">Team Goals</button>
+                <button class="nav-item" data-page="ops" id="nav-ops" role="tab" aria-selected="false" aria-controls="page-ops">Ops Execution</button>
+                <button class="nav-item" data-page="settings" id="nav-settings" role="tab" aria-selected="false" aria-controls="page-settings">Settings</button>
             </div>
         </nav>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" id="main-content">
             <!-- Dashboard Page -->
-            <div class="page-content active" id="page-dashboard">
+            <section class="page-content active" id="page-dashboard" role="tabpanel" aria-labelledby="dashboard-heading">
                 <div class="page-header">
-                    <h1>Executive Dashboard</h1>
+                    <h1 id="dashboard-heading">Executive Dashboard</h1>
                     <p>60-day forecast and key performance indicators</p>
                 </div>
 
@@ -1263,6 +1664,7 @@
                             </div>
                             <div class="table-wrapper">
                                 <table>
+                                    <caption class="sr-only">Upcoming closings with client details, prices, and probabilities</caption>
                                     <thead>
                                         <tr>
                                             <th>Type</th>
@@ -1313,12 +1715,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Pipeline Page -->
-            <div class="page-content" id="page-pipeline">
+            <section class="page-content" id="page-pipeline" role="tabpanel" aria-labelledby="pipeline-heading">
                 <div class="page-header">
-                    <h1>Pipeline Management</h1>
+                    <h1 id="pipeline-heading">Pipeline Management</h1>
                     <p>Track active clients and deal stages</p>
                 </div>
 
@@ -1349,6 +1751,7 @@
                     <div class="card-body">
                         <div class="table-wrapper">
                             <table>
+                                <caption class="sr-only">Pipeline clients with contact status, stage, and actions</caption>
                                 <thead>
                                     <tr>
                                         <th>Type</th>
@@ -1371,12 +1774,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Lead Sources Page -->
-            <div class="page-content" id="page-lead-sources">
+            <section class="page-content" id="page-lead-sources" role="tabpanel" aria-labelledby="lead-sources-heading">
                 <div class="page-header">
-                    <h1>Lead Sources</h1>
+                    <h1 id="lead-sources-heading">Lead Sources</h1>
                     <p>Track referral partners and centers of influence</p>
                 </div>
 
@@ -1444,12 +1847,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Deal Calculator Page -->
-            <div class="page-content" id="page-calculator">
+            <section class="page-content" id="page-calculator" role="tabpanel" aria-labelledby="calculator-heading">
                 <div class="page-header">
-                    <h1>Deal Calculator</h1>
+                    <h1 id="calculator-heading">Deal Calculator</h1>
                     <p>Calculate commission splits and net income per deal</p>
                 </div>
 
@@ -1580,12 +1983,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Quarter Plan Page -->
-            <div class="page-content" id="page-quarter-plan">
+            <section class="page-content" id="page-quarter-plan" role="tabpanel" aria-labelledby="quarter-plan-heading">
                 <div class="page-header">
-                    <h1>2026 Quarter Plan</h1>
+                    <h1 id="quarter-plan-heading">2026 Quarter Plan</h1>
                     <p>Quarterly targets and weekly execution cadence</p>
                 </div>
 
@@ -1711,22 +2114,22 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Team Goals Page -->
-            <div class="page-content" id="page-team-goals">
+            <section class="page-content" id="page-team-goals" role="tabpanel" aria-labelledby="team-goals-heading">
                 <div class="page-header">
-                    <h1>Team Goals</h1>
+                    <h1 id="team-goals-heading">Team Goals</h1>
                     <p>Individual 2026 goals and weekly scorecards</p>
                 </div>
 
                 <div id="team-goals-container"></div>
-            </div>
+            </section>
 
             <!-- Ops Execution Page -->
-            <div class="page-content" id="page-ops">
+            <section class="page-content" id="page-ops" role="tabpanel" aria-labelledby="ops-heading">
                 <div class="page-header">
-                    <h1>Operations Execution</h1>
+                    <h1 id="ops-heading">Operations Execution</h1>
                     <p>Transaction checklists, closing calendar, and bonus tracking</p>
                 </div>
 
@@ -1841,12 +2244,12 @@
                         </ul>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Settings Page (Admin Only) -->
-            <div class="page-content" id="page-settings">
+            <section class="page-content" id="page-settings" role="tabpanel" aria-labelledby="settings-heading">
                 <div class="page-header">
-                    <h1>Plan Settings</h1>
+                    <h1 id="settings-heading">Plan Settings</h1>
                     <p>Configure assumptions and team permissions</p>
                 </div>
 
@@ -1933,7 +2336,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
 
@@ -1942,7 +2345,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3 id="seller-modal-title">Add New Client</h3>
-                <button class="modal-close" onclick="closeModal('seller-modal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('seller-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="seller-form">
@@ -2066,7 +2469,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>Log Activity</h3>
-                <button class="modal-close" onclick="closeModal('activity-modal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('activity-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="activity-form">
@@ -2113,7 +2516,7 @@
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header">
                 <h3 id="client-detail-title">Client Details</h3>
-                <button class="modal-close" onclick="closeModal('client-detail-modal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('client-detail-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <!-- Client Info Summary -->
@@ -2144,7 +2547,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3 id="lead-source-modal-title">Add Lead Source</h3>
-                <button class="modal-close" onclick="closeModal('lead-source-modal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('lead-source-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="lead-source-form">
@@ -2199,7 +2602,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>Log Touch</h3>
-                <button class="modal-close" onclick="closeModal('lead-source-touch-modal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('lead-source-touch-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="lead-source-touch-form">
