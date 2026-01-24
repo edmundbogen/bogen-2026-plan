@@ -2232,9 +2232,10 @@
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <input type="text" id="contacts-search" placeholder="Search contacts..." style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 6px; min-width: 250px;">
                         <select id="contacts-filter" style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 6px;">
-                            <option value="all">All Clients</option>
-                            <option value="seller">Sellers Only</option>
-                            <option value="buyer">Buyers Only</option>
+                            <option value="all">All Contacts</option>
+                            <option value="seller">Sellers</option>
+                            <option value="buyer">Buyers</option>
+                            <option value="lead-source">Lead Sources</option>
                             <option value="has-phone">Has Phone</option>
                             <option value="no-phone">Missing Phone</option>
                             <option value="has-spouse">Has Spouse Info</option>
@@ -3008,22 +3009,51 @@
     <div class="modal-overlay" id="seller-modal">
         <div class="modal">
             <div class="modal-header">
-                <h3 id="seller-modal-title">Add New Client</h3>
+                <h3 id="seller-modal-title">Add Contact</h3>
                 <button class="modal-close" onclick="closeModal('seller-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="seller-form">
                     <input type="hidden" id="seller-id">
+                    <input type="hidden" id="seller-type" value="seller">
                     <div class="form-group">
-                        <label>Client Type</label>
-                        <select id="seller-type" onchange="toggleClientTypeFields()">
-                            <option value="seller">Seller</option>
-                            <option value="buyer">Buyer</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Client Name</label>
+                        <label>Contact Name</label>
                         <input type="text" id="seller-name" required placeholder="e.g., John Smith">
+                    </div>
+
+                    <!-- Tags Section -->
+                    <div class="form-group">
+                        <label>Relationship Tags <span style="font-weight: normal; color: var(--gray-500);">(select all that apply)</span></label>
+                        <div id="contact-tags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="seller" onchange="updateTagStyles(); toggleClientTypeFields();" style="accent-color: var(--brand-primary);">
+                                Seller
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="buyer" onchange="updateTagStyles(); toggleClientTypeFields();" style="accent-color: var(--brand-primary);">
+                                Buyer
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="lead-source" onchange="updateTagStyles();" style="accent-color: var(--brand-primary);">
+                                Lead Source
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="past-client" onchange="updateTagStyles();" style="accent-color: var(--brand-primary);">
+                                Past Client
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="investor" onchange="updateTagStyles();" style="accent-color: var(--brand-primary);">
+                                Investor
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="sphere" onchange="updateTagStyles();" style="accent-color: var(--brand-primary);">
+                                Sphere
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: var(--gray-100); border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="prospect" onchange="updateTagStyles();" style="accent-color: var(--brand-primary);">
+                                Prospect
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Contact Information Section -->
@@ -3220,11 +3250,11 @@
         </div>
     </div>
 
-    <!-- Client Detail Modal -->
+    <!-- Contact Detail Modal -->
     <div class="modal-overlay" id="client-detail-modal">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header">
-                <h3 id="client-detail-title">Client Details</h3>
+                <h3 id="client-detail-title">Contact Details</h3>
                 <button class="modal-close" onclick="closeModal('client-detail-modal')" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">

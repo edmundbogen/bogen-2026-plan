@@ -86,6 +86,59 @@ const PREAPPROVAL_LABELS = {
     'cash': 'Cash Buyer'
 };
 
+const TAG_LABELS = {
+    'seller': 'Seller',
+    'buyer': 'Buyer',
+    'lead-source': 'Lead Source',
+    'past-client': 'Past Client',
+    'investor': 'Investor',
+    'sphere': 'Sphere',
+    'prospect': 'Prospect'
+};
+
+const TAG_COLORS = {
+    'seller': { bg: '#DBEAFE', color: '#1E40AF' },
+    'buyer': { bg: '#D1FAE5', color: '#059669' },
+    'lead-source': { bg: '#FEE2E2', color: '#DC2626' },
+    'past-client': { bg: '#F3E8FF', color: '#7C3AED' },
+    'investor': { bg: '#FEF3C7', color: '#D97706' },
+    'sphere': { bg: '#E0E7FF', color: '#4338CA' },
+    'prospect': { bg: '#F3F4F6', color: '#4B5563' }
+};
+
+// Helper function to render tag badges
+function renderTagBadges(contact, maxTags = 3) {
+    // Get tags with backward compatibility
+    let tags = contact.tags || [];
+    if (tags.length === 0 && contact.type) {
+        tags = [contact.type];
+    }
+
+    if (tags.length === 0) {
+        return '<span style="color: var(--gray-400);">—</span>';
+    }
+
+    const displayTags = tags.slice(0, maxTags);
+    const badges = displayTags.map(tag => {
+        const colors = TAG_COLORS[tag] || { bg: '#F3F4F6', color: '#4B5563' };
+        const label = TAG_LABELS[tag] || tag;
+        return `<span style="display: inline-block; padding: 0.125rem 0.5rem; background: ${colors.bg}; color: ${colors.color}; border-radius: 12px; font-size: 0.6875rem; font-weight: 500; margin-right: 0.25rem; margin-bottom: 0.125rem;">${label}</span>`;
+    }).join('');
+
+    const extra = tags.length > maxTags ? `<span style="font-size: 0.6875rem; color: var(--gray-500);">+${tags.length - maxTags}</span>` : '';
+
+    return badges + extra;
+}
+
+// Helper function to check if contact has a specific tag
+function hasTag(contact, tag) {
+    const tags = contact.tags || [];
+    if (tags.length === 0 && contact.type) {
+        return contact.type === tag;
+    }
+    return tags.includes(tag);
+}
+
 const LEAD_SOURCE_TYPES = {
     'attorney': 'Attorney',
     'cpa': 'CPA/Accountant',
@@ -1190,10 +1243,10 @@ function initializePipelineFilters() {
 }
 
 function renderPipeline() {
-    // Update type counts
+    // Update type counts (now based on tags)
     const allTypeCount = appData.sellers.length;
-    const sellerCount = appData.sellers.filter(s => s.type !== 'buyer').length;
-    const buyerCount = appData.sellers.filter(s => s.type === 'buyer').length;
+    const sellerCount = appData.sellers.filter(s => hasTag(s, 'seller')).length;
+    const buyerCount = appData.sellers.filter(s => hasTag(s, 'buyer')).length;
 
     document.getElementById('count-type-all').textContent = allTypeCount;
     document.getElementById('count-type-seller').textContent = sellerCount;
@@ -1209,13 +1262,13 @@ function renderPipeline() {
         }
     });
 
-    // Filter by type first
+    // Filter by type first (now based on tags)
     let filtered = appData.sellers;
     if (currentTypeFilter !== 'all') {
         if (currentTypeFilter === 'seller') {
-            filtered = filtered.filter(s => s.type !== 'buyer');
-        } else {
-            filtered = filtered.filter(s => s.type === 'buyer');
+            filtered = filtered.filter(s => hasTag(s, 'seller'));
+        } else if (currentTypeFilter === 'buyer') {
+            filtered = filtered.filter(s => hasTag(s, 'buyer'));
         }
     }
 
@@ -1241,20 +1294,19 @@ function renderPipeline() {
     tbody.innerHTML = filtered.map(s => {
         const daysSinceTouch = s.lastTouchDate ? Math.floor((new Date() - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24)) : 999;
         const touchStatus = daysSinceTouch <= 14 ? 'success' : daysSinceTouch <= 30 ? 'warning' : 'danger';
-        const isBuyer = s.type === 'buyer';
-        const typeLabel = isBuyer ? 'Buyer' : 'Seller';
-        const typeBadgeClass = isBuyer ? 'badge-buyer' : 'badge-seller';
+        const isBuyer = hasTag(s, 'buyer');
+        const isSeller = hasTag(s, 'seller');
 
         // Value display: for buyers show budget range, for sellers show value
         let valueDisplay = '-';
-        if (isBuyer) {
+        if (isBuyer && !isSeller) {
             if (s.budgetMin || s.budgetMax) {
                 const min = s.budgetMin ? formatCurrency(s.budgetMin) : '?';
                 const max = s.budgetMax ? formatCurrency(s.budgetMax) : '?';
                 valueDisplay = `${min} - ${max}`;
             }
-        } else {
-            valueDisplay = s.value ? formatCurrency(s.value) : '-';
+        } else if (s.value) {
+            valueDisplay = formatCurrency(s.value);
         }
 
         // Originator display
@@ -1262,7 +1314,7 @@ function renderPipeline() {
 
         return `
             <tr>
-                <td><span class="badge ${typeBadgeClass}">${typeLabel}</span></td>
+                <td>${renderTagBadges(s, 2)}</td>
                 <td>
                     <strong>${s.name || 'Unknown'}</strong>
                     ${s.address ? `<br><span style="font-size: 0.8125rem; color: var(--gray-500);">${s.address}</span>` : ''}
@@ -1299,31 +1351,36 @@ function viewClient(id) {
     if (!client) return;
 
     currentDetailClientId = id;
-    const isBuyer = client.type === 'buyer';
+    const isBuyer = hasTag(client, 'buyer');
+    const isSeller = hasTag(client, 'seller');
 
     // Set title
-    document.getElementById('client-detail-title').textContent = client.name || 'Client Details';
+    document.getElementById('client-detail-title').textContent = client.name || 'Contact Details';
 
     // Build info section
     const leadSource = client.leadSourceId ? appData.leadSources.find(ls => ls.id === client.leadSourceId) : null;
 
     let infoHtml = `
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-            <div>
-                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Type</div>
-                <div><span class="badge ${isBuyer ? 'badge-buyer' : 'badge-seller'}">${isBuyer ? 'Buyer' : 'Seller'}</span></div>
+            <div style="grid-column: span 2;">
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Relationship</div>
+                <div>${renderTagBadges(client, 5)}</div>
             </div>
             <div>
                 <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Stage</div>
                 <div><span class="badge badge-info">${STAGE_LABELS[client.stage] || client.stage}</span></div>
             </div>
             <div>
-                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">${isBuyer ? 'Target Community' : 'Community'}</div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">${isBuyer && !isSeller ? 'Target Community' : 'Community'}</div>
                 <div>${client.community || '-'}</div>
             </div>
             <div>
-                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">${isBuyer ? 'Budget' : 'Value'}</div>
-                <div>${isBuyer ? (client.budgetMin || client.budgetMax ? `${formatCurrency(client.budgetMin || 0)} - ${formatCurrency(client.budgetMax || 0)}` : '-') : (client.value ? formatCurrency(client.value) : '-')}</div>
+                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">${isBuyer && !isSeller ? 'Budget' : (isSeller ? 'Value' : 'Value/Budget')}</div>
+                <div>${
+                    isSeller && client.value ? formatCurrency(client.value) :
+                    isBuyer && (client.budgetMin || client.budgetMax) ? `${formatCurrency(client.budgetMin || 0)} - ${formatCurrency(client.budgetMax || 0)}` :
+                    '-'
+                }</div>
             </div>
             <div>
                 <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Originator</div>
@@ -1345,7 +1402,7 @@ function viewClient(id) {
     `;
 
     // Add address for sellers
-    if (!isBuyer && client.address) {
+    if (isSeller && client.address) {
         infoHtml = `
             <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--gray-100); border-radius: 6px;">
                 <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; margin-bottom: 0.25rem;">Property Address</div>
@@ -1490,28 +1547,76 @@ function editClientFromDetail() {
 }
 
 function openAddSellerModal() {
-    document.getElementById('seller-modal-title').textContent = 'Add New Client';
+    document.getElementById('seller-modal-title').textContent = 'Add Contact';
     document.getElementById('seller-form').reset();
     document.getElementById('seller-id').value = '';
     document.getElementById('seller-type').value = 'seller';
     document.getElementById('seller-originator').value = currentUser ? currentUser.id : 'edmund';
+    // Reset all tags
+    setSelectedTags([]);
     populateLeadSourceDropdown();
     toggleClientTypeFields();
     openModal('seller-modal');
 }
 
+function getSelectedTags() {
+    const checkboxes = document.querySelectorAll('input[name="contact-tag"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function setSelectedTags(tags) {
+    // Clear all checkboxes first
+    document.querySelectorAll('input[name="contact-tag"]').forEach(cb => {
+        cb.checked = false;
+    });
+    // Check the ones in the tags array
+    if (tags && Array.isArray(tags)) {
+        tags.forEach(tag => {
+            const cb = document.querySelector(`input[name="contact-tag"][value="${tag}"]`);
+            if (cb) cb.checked = true;
+        });
+    }
+    updateTagStyles();
+}
+
+function updateTagStyles() {
+    document.querySelectorAll('#contact-tags label').forEach(label => {
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            label.style.background = 'var(--brand-primary-light)';
+            label.style.borderColor = 'var(--brand-primary)';
+            label.style.color = 'var(--brand-primary)';
+        } else {
+            label.style.background = 'var(--gray-100)';
+            label.style.borderColor = 'transparent';
+            label.style.color = 'inherit';
+        }
+    });
+}
+
 function toggleClientTypeFields() {
-    const type = document.getElementById('seller-type').value;
-    const isBuyer = type === 'buyer';
+    const tags = getSelectedTags();
+    const isSeller = tags.includes('seller');
+    const isBuyer = tags.includes('buyer');
 
-    // Toggle field visibility
-    document.getElementById('seller-fields').style.display = isBuyer ? 'none' : 'block';
+    // Update hidden type field for backward compatibility
+    if (isBuyer && !isSeller) {
+        document.getElementById('seller-type').value = 'buyer';
+    } else {
+        document.getElementById('seller-type').value = 'seller';
+    }
+
+    // Show seller fields if seller tag is checked (or if neither buyer nor seller)
+    const showSellerFields = isSeller || (!isBuyer && !isSeller);
+    document.getElementById('seller-fields').style.display = showSellerFields ? 'block' : 'none';
+    document.getElementById('field-address').style.display = showSellerFields ? 'block' : 'none';
+
+    // Show buyer fields if buyer tag is checked
     document.getElementById('buyer-fields').style.display = isBuyer ? 'block' : 'none';
-    document.getElementById('field-address').style.display = isBuyer ? 'none' : 'block';
 
-    // Toggle stage options
+    // Toggle stage options based on tags
     document.querySelectorAll('.seller-stage-option').forEach(opt => {
-        opt.style.display = isBuyer ? 'none' : '';
+        opt.style.display = showSellerFields ? '' : 'none';
     });
     document.querySelectorAll('.buyer-stage-option').forEach(opt => {
         opt.style.display = isBuyer ? '' : 'none';
@@ -1520,14 +1625,23 @@ function toggleClientTypeFields() {
     // Update labels
     const communityLabel = document.getElementById('label-community');
     if (communityLabel) {
-        communityLabel.textContent = isBuyer ? 'Target Community' : 'Community';
+        if (isBuyer && !isSeller) {
+            communityLabel.textContent = 'Target Community';
+        } else {
+            communityLabel.textContent = 'Community';
+        }
     }
 
-    // Update modal title for new clients
+    // Update modal title for new contacts
     const titleEl = document.getElementById('seller-modal-title');
     const isEdit = document.getElementById('seller-id').value !== '';
     if (!isEdit) {
-        titleEl.textContent = isBuyer ? 'Add Client (Buyer)' : 'Add Client (Seller)';
+        if (tags.length === 0) {
+            titleEl.textContent = 'Add Contact';
+        } else {
+            const tagLabels = tags.map(t => TAG_LABELS[t] || t).slice(0, 2);
+            titleEl.textContent = 'Add Contact (' + tagLabels.join(', ') + (tags.length > 2 ? '...' : '') + ')';
+        }
     }
 }
 
@@ -1535,8 +1649,20 @@ function editSeller(id) {
     const seller = appData.sellers.find(s => s.id === id);
     if (!seller) return;
 
-    const isBuyer = seller.type === 'buyer';
-    document.getElementById('seller-modal-title').textContent = isBuyer ? 'Edit Client (Buyer)' : 'Edit Client (Seller)';
+    // Set tags (with backward compatibility)
+    let tags = seller.tags || [];
+    if (tags.length === 0 && seller.type) {
+        // Convert old type to tags for backward compatibility
+        tags = [seller.type];
+    }
+    setSelectedTags(tags);
+
+    // Update modal title based on tags
+    const tagLabels = tags.map(t => TAG_LABELS[t] || t).slice(0, 2);
+    document.getElementById('seller-modal-title').textContent = tags.length > 0
+        ? 'Edit Contact (' + tagLabels.join(', ') + (tags.length > 2 ? '...' : '') + ')'
+        : 'Edit Contact';
+
     document.getElementById('seller-id').value = seller.id;
     document.getElementById('seller-type').value = seller.type || 'seller';
     document.getElementById('seller-name').value = seller.name || '';
@@ -1581,12 +1707,20 @@ function editSeller(id) {
 function saveSeller() {
     const id = document.getElementById('seller-id').value || generateId();
     const isNew = !document.getElementById('seller-id').value;
-    const type = document.getElementById('seller-type').value;
-    const isBuyer = type === 'buyer';
+    const tags = getSelectedTags();
+
+    // Determine type for backward compatibility
+    const isBuyer = tags.includes('buyer');
+    const isSeller = tags.includes('seller');
+    let type = 'seller'; // default
+    if (isBuyer && !isSeller) {
+        type = 'buyer';
+    }
 
     const seller = {
         id,
         type: type,
+        tags: tags, // New: array of relationship tags
         name: document.getElementById('seller-name').value,
         // Contact information
         phone: document.getElementById('seller-phone').value,
@@ -1597,19 +1731,19 @@ function saveSeller() {
         spouseName: document.getElementById('seller-spouse-name').value,
         spousePhone: document.getElementById('seller-spouse-phone').value,
         spouseEmail: document.getElementById('seller-spouse-email').value,
-        // Property/Deal info
-        address: isBuyer ? '' : document.getElementById('seller-address').value,
+        // Property/Deal info (save if seller tag is present OR no buyer/seller tags at all)
+        address: (isSeller || !isBuyer) ? document.getElementById('seller-address').value : '',
         community: document.getElementById('seller-community').value,
-        value: isBuyer ? 0 : (parseFloat(document.getElementById('seller-value').value) || 0),
+        value: (isSeller || !isBuyer) ? (parseFloat(document.getElementById('seller-value').value) || 0) : 0,
         timing: document.getElementById('seller-timing').value,
         stage: document.getElementById('seller-stage').value,
-        pricing: isBuyer ? '' : document.getElementById('seller-pricing').value,
+        pricing: (isSeller || !isBuyer) ? document.getElementById('seller-pricing').value : '',
         nextAction: document.getElementById('seller-next-action').value,
         originator: document.getElementById('seller-originator').value,
         probability: parseInt(document.getElementById('seller-probability').value) || 50,
         closeDate: document.getElementById('seller-close-date').value,
         notes: document.getElementById('seller-notes').value,
-        // Buyer-specific fields
+        // Buyer-specific fields (save if buyer tag is present)
         budgetMin: isBuyer ? (parseFloat(document.getElementById('buyer-budget-min').value) || 0) : 0,
         budgetMax: isBuyer ? (parseFloat(document.getElementById('buyer-budget-max').value) || 0) : 0,
         preapproval: isBuyer ? document.getElementById('buyer-preapproval').value : '',
@@ -1634,6 +1768,8 @@ function saveSeller() {
     renderPipeline();
     renderDashboard();
     renderLeadSources();
+    renderContacts();
+    updateContactStats();
 }
 
 function openActivityModal(sellerId) {
@@ -2708,11 +2844,13 @@ function renderContacts() {
         );
     }
 
-    // Apply type filter
+    // Apply type filter (now based on tags)
     if (contactsFilterType === 'seller') {
-        clients = clients.filter(c => c.type !== 'buyer');
+        clients = clients.filter(c => hasTag(c, 'seller'));
     } else if (contactsFilterType === 'buyer') {
-        clients = clients.filter(c => c.type === 'buyer');
+        clients = clients.filter(c => hasTag(c, 'buyer'));
+    } else if (contactsFilterType === 'lead-source') {
+        clients = clients.filter(c => hasTag(c, 'lead-source'));
     } else if (contactsFilterType === 'has-phone') {
         clients = clients.filter(c => c.phone);
     } else if (contactsFilterType === 'no-phone') {
@@ -2733,14 +2871,10 @@ function renderContacts() {
     if (emptyEl) emptyEl.style.display = 'none';
 
     tbody.innerHTML = clients.map(c => {
-        const isBuyer = c.type === 'buyer';
-        const typeLabel = isBuyer ? 'Buyer' : 'Seller';
-        const typeBadge = isBuyer ? 'badge-buyer' : 'badge-seller';
-
         return `
             <tr style="border-bottom: 1px solid var(--gray-200);">
                 <td style="padding: 0.75rem; font-weight: 500;">${c.name || '-'}</td>
-                <td style="padding: 0.75rem;"><span class="badge ${typeBadge}">${typeLabel}</span></td>
+                <td style="padding: 0.75rem;">${renderTagBadges(c, 2)}</td>
                 <td style="padding: 0.75rem;">
                     ${c.phone ? `<a href="tel:${c.phone}" style="color: var(--brand-primary); text-decoration: none;">${c.phone}</a>` : '<span style="color: var(--gray-400);">—</span>'}
                 </td>
