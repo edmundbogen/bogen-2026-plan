@@ -1467,6 +1467,407 @@
                 padding: 1rem;
             }
         }
+
+        /* ==========================================
+           SOCIAL MEDIA SECTION - Colorful Platform Styles
+           ========================================== */
+
+        /* Platform Colors */
+        :root {
+            --instagram-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            --facebook-blue: #1877F2;
+            --linkedin-blue: #0A66C2;
+            --twitter-black: #000000;
+            --tiktok-gradient: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
+        }
+
+        .social-media-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .social-filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: 25px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .social-filter-btn:hover {
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+        }
+
+        .social-filter-btn.active {
+            background: var(--brand-primary);
+            border-color: var(--brand-primary);
+            color: white;
+        }
+
+        .social-filter-btn.instagram.active {
+            background: #E4405F;
+            border-color: #E4405F;
+        }
+
+        .social-filter-btn.facebook.active {
+            background: var(--facebook-blue);
+            border-color: var(--facebook-blue);
+        }
+
+        .social-filter-btn.linkedin.active {
+            background: var(--linkedin-blue);
+            border-color: var(--linkedin-blue);
+        }
+
+        .social-filter-btn.twitter.active {
+            background: var(--twitter-black);
+            border-color: var(--twitter-black);
+        }
+
+        .social-filter-btn.tiktok.active {
+            background: #000;
+            border-color: #00f2ea;
+        }
+
+        .social-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-200);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .social-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .social-stat-card.draft { border-top: 4px solid #F59E0B; }
+        .social-stat-card.approved { border-top: 4px solid var(--brand-primary); }
+        .social-stat-card.posted { border-top: 4px solid var(--success); }
+
+        .social-stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .social-stat-card.draft .social-stat-number { color: #F59E0B; }
+        .social-stat-card.approved .social-stat-number { color: var(--brand-primary); }
+        .social-stat-card.posted .social-stat-number { color: var(--success); }
+
+        .social-stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        .social-posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .social-post-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--gray-200);
+        }
+
+        .social-post-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .social-post-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .social-post-header.instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .social-post-header.facebook { background: var(--facebook-blue); }
+        .social-post-header.linkedin { background: var(--linkedin-blue); }
+        .social-post-header.twitter { background: var(--twitter-black); }
+        .social-post-header.tiktok { background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%); }
+
+        .social-platform-icon {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .social-platform-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .social-post-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .social-post-status.draft {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        .social-post-status.approved {
+            background: white;
+            color: var(--brand-primary);
+        }
+
+        .social-post-status.posted {
+            background: var(--success);
+            color: white;
+        }
+
+        .social-post-body {
+            padding: 1.25rem;
+        }
+
+        .social-post-content {
+            font-size: 0.9375rem;
+            line-height: 1.6;
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .social-post-topic {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--gray-100);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+        }
+
+        .social-post-topic.real-estate { background: #DBEAFE; color: #1E40AF; }
+        .social-post-topic.ai { background: #F3E8FF; color: #7C3AED; }
+        .social-post-topic.douglas-elliman { background: #FEE2E2; color: #DC2626; }
+        .social-post-topic.market-update { background: #D1FAE5; color: #059669; }
+        .social-post-topic.personal { background: #FEF3C7; color: #D97706; }
+
+        .social-post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .social-post-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .social-post-actions button {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .social-post-actions button:hover {
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+        }
+
+        .social-post-actions button.approve {
+            background: var(--brand-primary);
+            border-color: var(--brand-primary);
+            color: white;
+        }
+
+        .social-post-actions button.approve:hover {
+            background: var(--brand-primary-dark);
+        }
+
+        .social-post-actions button.post {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .add-post-btn {
+            background: linear-gradient(135deg, var(--brand-primary) 0%, #0077b6 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 15px rgba(0, 168, 225, 0.3);
+        }
+
+        .add-post-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 168, 225, 0.4);
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .social-empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            border: 2px dashed var(--gray-300);
+        }
+
+        .social-empty-state h3 {
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .social-empty-state p {
+            color: var(--gray-500);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Social Media Modal Enhancements */
+        .platform-select-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .platform-select-btn {
+            padding: 0.75rem;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.6875rem;
+            font-weight: 500;
+        }
+
+        .platform-select-btn:hover {
+            border-color: var(--gray-400);
+        }
+
+        .platform-select-btn.selected.instagram { border-color: #E4405F; background: #FDF2F8; }
+        .platform-select-btn.selected.facebook { border-color: var(--facebook-blue); background: #EFF6FF; }
+        .platform-select-btn.selected.linkedin { border-color: var(--linkedin-blue); background: #EFF6FF; }
+        .platform-select-btn.selected.twitter { border-color: var(--twitter-black); background: #F3F4F6; }
+        .platform-select-btn.selected.tiktok { border-color: #00f2ea; background: #F0FDFA; }
+
+        .topic-select-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .topic-select-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--gray-300);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .topic-select-btn.selected {
+            border-color: var(--brand-primary);
+            background: var(--brand-primary-light);
+            color: var(--brand-primary);
+        }
+
+        @media (max-width: 768px) {
+            .social-posts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .platform-select-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .social-media-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .social-filters {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1545,6 +1946,7 @@
                 <button class="mobile-nav-item" data-page="calculator">Deal Calculator</button>
                 <button class="mobile-nav-item" data-page="quarter-plan">Quarter Plan</button>
                 <button class="mobile-nav-item" data-page="team-goals">Team Goals</button>
+                <button class="mobile-nav-item" data-page="social-media">Social Media</button>
                 <button class="mobile-nav-item" data-page="ops" id="mobile-nav-ops">Ops Execution</button>
                 <button class="mobile-nav-item" data-page="settings" id="mobile-nav-settings">Settings</button>
             </div>
@@ -1562,6 +1964,7 @@
                 <button class="nav-item" data-page="calculator" role="tab" aria-selected="false" aria-controls="page-calculator">Deal Calculator</button>
                 <button class="nav-item" data-page="quarter-plan" role="tab" aria-selected="false" aria-controls="page-quarter-plan">Quarter Plan</button>
                 <button class="nav-item" data-page="team-goals" role="tab" aria-selected="false" aria-controls="page-team-goals">Team Goals</button>
+                <button class="nav-item" data-page="social-media" role="tab" aria-selected="false" aria-controls="page-social-media">Social Media</button>
                 <button class="nav-item" data-page="ops" id="nav-ops" role="tab" aria-selected="false" aria-controls="page-ops">Ops Execution</button>
                 <button class="nav-item" data-page="settings" id="nav-settings" role="tab" aria-selected="false" aria-controls="page-settings">Settings</button>
             </div>
@@ -2145,6 +2548,68 @@
                 <div id="team-goals-container"></div>
             </section>
 
+            <!-- Social Media Page -->
+            <section class="page-content" id="page-social-media" role="tabpanel" aria-labelledby="social-media-heading">
+                <div class="page-header">
+                    <h1 id="social-media-heading">Social Media Content</h1>
+                    <p>Draft, approve, and track social posts for all platforms</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="social-stats">
+                    <div class="social-stat-card draft">
+                        <div class="social-stat-number" id="social-stat-draft">0</div>
+                        <div class="social-stat-label">Drafts</div>
+                    </div>
+                    <div class="social-stat-card approved">
+                        <div class="social-stat-number" id="social-stat-approved">0</div>
+                        <div class="social-stat-label">Approved</div>
+                    </div>
+                    <div class="social-stat-card posted">
+                        <div class="social-stat-number" id="social-stat-posted">0</div>
+                        <div class="social-stat-label">Posted</div>
+                    </div>
+                </div>
+
+                <!-- Filters and Actions -->
+                <div class="social-media-header">
+                    <div class="social-filters">
+                        <button class="social-filter-btn active" data-filter="all">All</button>
+                        <button class="social-filter-btn instagram" data-filter="instagram">Instagram</button>
+                        <button class="social-filter-btn facebook" data-filter="facebook">Facebook</button>
+                        <button class="social-filter-btn linkedin" data-filter="linkedin">LinkedIn</button>
+                        <button class="social-filter-btn twitter" data-filter="twitter">Twitter/X</button>
+                        <button class="social-filter-btn tiktok" data-filter="tiktok">TikTok</button>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="generate-btn" onclick="generateSocialPost()">✨ Generate Post</button>
+                        <button class="add-post-btn" onclick="openModal('social-post-modal')">+ Add Post</button>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div style="margin-bottom: 1.5rem;">
+                    <div class="social-filters">
+                        <button class="social-filter-btn active" data-status="all">All Status</button>
+                        <button class="social-filter-btn" data-status="draft">Drafts</button>
+                        <button class="social-filter-btn" data-status="approved">Approved</button>
+                        <button class="social-filter-btn" data-status="posted">Posted</button>
+                    </div>
+                </div>
+
+                <!-- Posts Grid -->
+                <div class="social-posts-grid" id="social-posts-container">
+                    <!-- Posts will be rendered here by JavaScript -->
+                </div>
+
+                <!-- Empty State -->
+                <div class="social-empty-state" id="social-empty-state" style="display: none;">
+                    <h3>No Posts Yet</h3>
+                    <p>Create your first social media post or generate one with AI</p>
+                    <button class="generate-btn" onclick="generateSocialPost()">✨ Generate Your First Post</button>
+                </div>
+            </section>
+
             <!-- Ops Execution Page -->
             <section class="page-content" id="page-ops" role="tabpanel" aria-labelledby="ops-heading">
                 <div class="page-header">
@@ -2357,6 +2822,82 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Social Post Modal -->
+    <div class="modal-overlay" id="social-post-modal">
+        <div class="modal" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 id="social-post-modal-title">Create Social Post</h3>
+                <button class="modal-close" onclick="closeModal('social-post-modal')" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="social-post-form">
+                    <input type="hidden" id="social-post-id">
+
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <div class="platform-select-grid">
+                            <button type="button" class="platform-select-btn instagram" data-platform="instagram" onclick="selectPlatform('instagram')">
+                                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="#E4405F" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                                Instagram
+                            </button>
+                            <button type="button" class="platform-select-btn facebook" data-platform="facebook" onclick="selectPlatform('facebook')">
+                                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                Facebook
+                            </button>
+                            <button type="button" class="platform-select-btn linkedin" data-platform="linkedin" onclick="selectPlatform('linkedin')">
+                                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="#0A66C2" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                LinkedIn
+                            </button>
+                            <button type="button" class="platform-select-btn twitter" data-platform="twitter" onclick="selectPlatform('twitter')">
+                                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="#000000" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                Twitter/X
+                            </button>
+                            <button type="button" class="platform-select-btn tiktok" data-platform="tiktok" onclick="selectPlatform('tiktok')">
+                                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="#000000" d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                                TikTok
+                            </button>
+                        </div>
+                        <input type="hidden" id="social-platform" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Topic</label>
+                        <div class="topic-select-grid">
+                            <button type="button" class="topic-select-btn" data-topic="real-estate" onclick="selectTopic('real-estate')">South Florida Real Estate</button>
+                            <button type="button" class="topic-select-btn" data-topic="douglas-elliman" onclick="selectTopic('douglas-elliman')">Douglas Elliman</button>
+                            <button type="button" class="topic-select-btn" data-topic="ai" onclick="selectTopic('ai')">AI & ChatGPT</button>
+                            <button type="button" class="topic-select-btn" data-topic="market-update" onclick="selectTopic('market-update')">Market Update</button>
+                            <button type="button" class="topic-select-btn" data-topic="personal" onclick="selectTopic('personal')">Personal Brand</button>
+                        </div>
+                        <input type="hidden" id="social-topic" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Post Content</label>
+                        <textarea id="social-content" rows="6" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: inherit; resize: vertical;" placeholder="Write your post content here..." required></textarea>
+                        <small style="color: var(--gray-500); font-size: 0.75rem;">
+                            Character count: <span id="char-count">0</span> |
+                            <span id="platform-limit">Select a platform to see limit</span>
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="social-status">
+                            <option value="draft">Draft</option>
+                            <option value="approved">Approved</option>
+                            <option value="posted">Posted</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('social-post-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSocialPost()">Save Post</button>
+            </div>
+        </div>
     </div>
 
     <!-- Add Client Modal -->
