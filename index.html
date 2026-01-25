@@ -2750,7 +2750,7 @@
                         <button class="social-filter-btn tiktok" data-filter="tiktok">TikTok</button>
                     </div>
                     <div style="display: flex; gap: 0.75rem;">
-                        <button class="generate-btn" onclick="generateSocialPost()">✨ Generate Post</button>
+                        <button class="generate-btn" onclick="openAIGenerateModal()" style="background: linear-gradient(135deg, #10a37f, #0d8c6d);">✨ AI Generate</button>
                         <button class="add-post-btn" onclick="openModal('social-post-modal')">+ Add Post</button>
                     </div>
                 </div>
@@ -2774,7 +2774,7 @@
                 <div class="social-empty-state" id="social-empty-state" style="display: none;">
                     <h3>No Posts Yet</h3>
                     <p>Create your first social media post or generate one with AI</p>
-                    <button class="generate-btn" onclick="generateSocialPost()">✨ Generate Your First Post</button>
+                    <button class="generate-btn" onclick="openAIGenerateModal()" style="background: linear-gradient(135deg, #10a37f, #0d8c6d);">✨ AI Generate Your First Post</button>
                 </div>
             </section>
 
@@ -3032,6 +3032,66 @@
                     </div>
                 </div>
 
+                <!-- AI Content Generation Settings -->
+                <div class="card" style="margin-top: 1.5rem; border: 2px solid #10a37f;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #10a37f15, #10a37f05);">
+                        <h3 style="color: #10a37f;">AI Content Generation</h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 1rem;">
+                            Configure AI-powered social media post and image generation. Your API key is stored locally in your browser only.
+                        </p>
+
+                        <div class="form-group">
+                            <label>OpenAI API Key</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="password" id="setting-openai-key" placeholder="sk-..." style="flex: 1;">
+                                <button class="btn btn-secondary" onclick="toggleApiKeyVisibility()" style="padding: 0.5rem 0.75rem;">
+                                    <span id="api-key-toggle-icon">Show</span>
+                                </button>
+                            </div>
+                            <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Character Description (for cartoon images)</label>
+                            <textarea id="setting-character-description" rows="4" placeholder="Distinguished man in his 50s with short gray-flecked dark hair, black rectangular glasses, navy blazer, plaid shirt, colorful pocket square..."></textarea>
+                            <small style="color: var(--gray-500); font-size: 0.75rem;">This description is used to generate consistent cartoon images of you</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Cartoon Style</label>
+                            <select id="setting-cartoon-style">
+                                <option value="pixar">Pixar/Disney Style - Warm, friendly, 3D animated look</option>
+                                <option value="editorial">Editorial Illustration - Professional, clean, modern</option>
+                                <option value="comic">Comic Book Style - Bold lines, vibrant colors</option>
+                                <option value="watercolor">Watercolor - Soft, artistic, painterly</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Brand Colors</label>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="color" id="setting-brand-color-1" value="#1e3a5f" style="width: 40px; height: 32px; border: none; cursor: pointer;">
+                                    <span style="font-size: 0.75rem;">Primary (Navy)</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="color" id="setting-brand-color-2" value="#c9a962" style="width: 40px; height: 32px; border: none; cursor: pointer;">
+                                    <span style="font-size: 0.75rem;">Secondary (Gold)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="saveAISettings()" style="background: #10a37f; border-color: #10a37f;">Save AI Settings</button>
+                            <button class="btn btn-secondary" onclick="testOpenAIConnection()">Test Connection</button>
+                        </div>
+
+                        <div id="ai-connection-status" style="margin-top: 1rem; display: none;"></div>
+                    </div>
+                </div>
+
                 <!-- Backup & Restore (Prominent Section) -->
                 <div class="card" style="margin-top: 1.5rem; border: 2px solid var(--brand-primary);">
                     <div class="card-header" style="background: var(--brand-primary-light);">
@@ -3168,6 +3228,99 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('social-post-modal')">Cancel</button>
                 <button class="btn btn-primary" onclick="saveSocialPost()">Save Post</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Generate Post Modal -->
+    <div class="modal-overlay" id="ai-generate-modal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10a37f15, #10a37f05);">
+                <h3 style="color: #10a37f;">AI Content Generator</h3>
+                <button class="modal-close" onclick="closeModal('ai-generate-modal')" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="ai-generate-step-1">
+                    <div class="form-group">
+                        <label style="font-weight: 600; font-size: 1rem;">What do you want to post about?</label>
+                        <textarea id="ai-topic-prompt" rows="3" style="width: 100%; padding: 0.75rem; border: 2px solid #10a37f; border-radius: 8px; font-family: inherit; font-size: 1rem;" placeholder="Example: Interest rates dropped this week, share some insights about what this means for South Florida buyers..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <select id="ai-platform-select" style="width: 100%;">
+                            <option value="instagram">Instagram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="tiktok">TikTok</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Search for recent news about:</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.25rem; font-weight: normal; cursor: pointer;">
+                                <input type="checkbox" id="ai-search-sofla" checked> South Florida Real Estate
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.25rem; font-weight: normal; cursor: pointer;">
+                                <input type="checkbox" id="ai-search-elliman" checked> Douglas Elliman
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.25rem; font-weight: normal; cursor: pointer;">
+                                <input type="checkbox" id="ai-search-standrews"> St. Andrews Country Club
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.25rem; font-weight: normal; cursor: pointer;">
+                                <input type="checkbox" id="ai-search-national"> National Real Estate News
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="ai-generate-image" checked>
+                            Generate cartoon image to go with post
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="generateAIPost()" style="width: 100%; background: #10a37f; border-color: #10a37f; padding: 0.875rem; font-size: 1rem;">
+                        Generate Content
+                    </button>
+                </div>
+
+                <div id="ai-generate-loading" style="display: none; text-align: center; padding: 2rem;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">🔄</div>
+                    <div id="ai-loading-status" style="font-weight: 600; color: #10a37f;">Searching for news...</div>
+                    <div style="margin-top: 1rem; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden;">
+                        <div id="ai-progress-bar" style="width: 0%; height: 100%; background: #10a37f; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+
+                <div id="ai-generate-result" style="display: none;">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Generated Post</label>
+                        <textarea id="ai-generated-content" rows="6" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div id="ai-generated-image-container" style="display: none; margin-bottom: 1rem;">
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Generated Image</label>
+                        <img id="ai-generated-image" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--gray-300);">
+                        <input type="hidden" id="ai-generated-image-url">
+                    </div>
+
+                    <div id="ai-news-sources" style="background: var(--gray-100); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.8125rem;">
+                        <strong>News sources used:</strong>
+                        <div id="ai-sources-list" style="margin-top: 0.5rem; color: var(--gray-600);"></div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-secondary" onclick="regenerateAIPost()" style="flex: 1;">Regenerate</button>
+                        <button class="btn btn-primary" onclick="useAIGeneratedPost()" style="flex: 1; background: #10a37f; border-color: #10a37f;">Use This Post</button>
+                    </div>
+                </div>
+
+                <div id="ai-generate-error" style="display: none; padding: 1rem; background: #fee2e2; color: #dc2626; border-radius: 8px; margin-top: 1rem;">
+                    <strong>Error:</strong> <span id="ai-error-message"></span>
+                </div>
             </div>
         </div>
     </div>

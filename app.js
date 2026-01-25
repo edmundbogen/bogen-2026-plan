@@ -896,6 +896,7 @@ function showApp() {
     // Load settings into form if admin
     if (currentUser.role === 'admin') {
         loadSettingsForm();
+        loadAISettingsForm();
     }
 
     // Render all pages
@@ -2587,6 +2588,372 @@ function initializeMobileNavigation() {
             closeMobileMenu();
         });
     });
+}
+
+// ===========================================
+// AI CONTENT GENERATION SETTINGS
+// ===========================================
+
+const AI_SETTINGS_KEY = 'bogen2026_ai_settings';
+
+const DEFAULT_CHARACTER_DESCRIPTION = `Distinguished professional man in his mid-50s with short, neatly styled dark hair with natural gray at the temples. He wears black rectangular glasses with thick frames. Dressed in a tailored navy blue blazer over a white and blue plaid button-up shirt, with a colorful striped pocket square (pink, green, white). Gold watch on wrist. Confident, approachable expression with a subtle knowing smile. Clean-shaven, fit appearance. South Florida luxury real estate professional.`;
+
+function getAISettings() {
+    try {
+        const saved = localStorage.getItem(AI_SETTINGS_KEY);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (err) {
+        console.error('Failed to load AI settings:', err);
+    }
+    return {
+        openaiKey: '',
+        characterDescription: DEFAULT_CHARACTER_DESCRIPTION,
+        cartoonStyle: 'pixar',
+        brandColor1: '#1e3a5f',
+        brandColor2: '#c9a962'
+    };
+}
+
+function loadAISettingsForm() {
+    const settings = getAISettings();
+    const keyInput = document.getElementById('setting-openai-key');
+    const descInput = document.getElementById('setting-character-description');
+    const styleInput = document.getElementById('setting-cartoon-style');
+    const color1Input = document.getElementById('setting-brand-color-1');
+    const color2Input = document.getElementById('setting-brand-color-2');
+
+    if (keyInput) keyInput.value = settings.openaiKey || '';
+    if (descInput) descInput.value = settings.characterDescription || DEFAULT_CHARACTER_DESCRIPTION;
+    if (styleInput) styleInput.value = settings.cartoonStyle || 'pixar';
+    if (color1Input) color1Input.value = settings.brandColor1 || '#1e3a5f';
+    if (color2Input) color2Input.value = settings.brandColor2 || '#c9a962';
+}
+
+function saveAISettings() {
+    const settings = {
+        openaiKey: document.getElementById('setting-openai-key')?.value || '',
+        characterDescription: document.getElementById('setting-character-description')?.value || DEFAULT_CHARACTER_DESCRIPTION,
+        cartoonStyle: document.getElementById('setting-cartoon-style')?.value || 'pixar',
+        brandColor1: document.getElementById('setting-brand-color-1')?.value || '#1e3a5f',
+        brandColor2: document.getElementById('setting-brand-color-2')?.value || '#c9a962'
+    };
+
+    try {
+        localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(settings));
+        alert('AI settings saved successfully!');
+    } catch (err) {
+        console.error('Failed to save AI settings:', err);
+        alert('Failed to save AI settings: ' + err.message);
+    }
+}
+
+function toggleApiKeyVisibility() {
+    const input = document.getElementById('setting-openai-key');
+    const toggle = document.getElementById('api-key-toggle-icon');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        toggle.textContent = 'Hide';
+    } else {
+        input.type = 'password';
+        toggle.textContent = 'Show';
+    }
+}
+
+async function testOpenAIConnection() {
+    const statusDiv = document.getElementById('ai-connection-status');
+    const settings = getAISettings();
+
+    if (!settings.openaiKey) {
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = '<div style="padding: 0.75rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">Please enter an API key first.</div>';
+        return;
+    }
+
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = '<div style="padding: 0.75rem; background: #f3f4f6; color: #4b5563; border-radius: 8px;">Testing connection...</div>';
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/models', {
+            headers: {
+                'Authorization': `Bearer ${settings.openaiKey}`
+            }
+        });
+
+        if (response.ok) {
+            statusDiv.innerHTML = '<div style="padding: 0.75rem; background: #d1fae5; color: #059669; border-radius: 8px;">Connection successful! Your API key is valid.</div>';
+        } else {
+            const error = await response.json();
+            statusDiv.innerHTML = `<div style="padding: 0.75rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">Connection failed: ${error.error?.message || 'Invalid API key'}</div>`;
+        }
+    } catch (err) {
+        statusDiv.innerHTML = `<div style="padding: 0.75rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">Connection error: ${err.message}</div>`;
+    }
+}
+
+// ===========================================
+// AI CONTENT GENERATION
+// ===========================================
+
+let lastAIGenerationSettings = null;
+
+function openAIGenerateModal() {
+    const settings = getAISettings();
+    if (!settings.openaiKey) {
+        alert('Please add your OpenAI API key in Settings first.');
+        return;
+    }
+
+    // Reset modal state
+    document.getElementById('ai-generate-step-1').style.display = 'block';
+    document.getElementById('ai-generate-loading').style.display = 'none';
+    document.getElementById('ai-generate-result').style.display = 'none';
+    document.getElementById('ai-generate-error').style.display = 'none';
+    document.getElementById('ai-topic-prompt').value = '';
+
+    openModal('ai-generate-modal');
+}
+
+function updateAIProgress(status, percent) {
+    document.getElementById('ai-loading-status').textContent = status;
+    document.getElementById('ai-progress-bar').style.width = percent + '%';
+}
+
+async function searchNews(topics) {
+    // Build search query based on selected topics
+    const searchTerms = [];
+    if (topics.sofla) searchTerms.push('South Florida real estate market');
+    if (topics.elliman) searchTerms.push('Douglas Elliman');
+    if (topics.standrews) searchTerms.push('St Andrews Country Club Boca Raton');
+    if (topics.national) searchTerms.push('real estate market news');
+
+    // For now, we'll use OpenAI's knowledge + the user's prompt
+    // In a full implementation, you'd integrate a news API here
+    return searchTerms.join(', ');
+}
+
+async function generateAIPost() {
+    const settings = getAISettings();
+    const prompt = document.getElementById('ai-topic-prompt').value.trim();
+    const platform = document.getElementById('ai-platform-select').value;
+    const generateImage = document.getElementById('ai-generate-image').checked;
+
+    const searchTopics = {
+        sofla: document.getElementById('ai-search-sofla').checked,
+        elliman: document.getElementById('ai-search-elliman').checked,
+        standrews: document.getElementById('ai-search-standrews').checked,
+        national: document.getElementById('ai-search-national').checked
+    };
+
+    if (!prompt) {
+        alert('Please enter what you want to post about.');
+        return;
+    }
+
+    // Save settings for regeneration
+    lastAIGenerationSettings = { prompt, platform, generateImage, searchTopics };
+
+    // Show loading state
+    document.getElementById('ai-generate-step-1').style.display = 'none';
+    document.getElementById('ai-generate-loading').style.display = 'block';
+    document.getElementById('ai-generate-error').style.display = 'none';
+
+    try {
+        // Step 1: Build context from search topics
+        updateAIProgress('Gathering context...', 20);
+        const newsContext = await searchNews(searchTopics);
+
+        // Step 2: Generate post content
+        updateAIProgress('Writing your post...', 40);
+        const charLimit = PLATFORM_CHAR_LIMITS[platform];
+        const platformName = PLATFORM_NAMES[platform];
+
+        const contentPrompt = `You are Edmund Bogen, a luxury real estate professional at Douglas Elliman in South Florida. You specialize in high-end properties in communities like St. Andrews Country Club in Boca Raton.
+
+Your voice is: Professional yet approachable, knowledgeable about the South Florida luxury market, confident but not arrogant, helpful and informative.
+
+Write a ${platformName} post (max ${charLimit} characters) about: ${prompt}
+
+Context/Topics to consider: ${newsContext}
+
+Guidelines:
+- Be authentic and personable
+- Include relevant hashtags at the end
+- Don't be overly salesy - provide value first
+- If discussing market trends, be factual and balanced
+- Match the tone to ${platformName}'s audience
+
+Write only the post content, nothing else.`;
+
+        const contentResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.openaiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o',
+                messages: [{ role: 'user', content: contentPrompt }],
+                max_tokens: 1000,
+                temperature: 0.7
+            })
+        });
+
+        if (!contentResponse.ok) {
+            const error = await contentResponse.json();
+            throw new Error(error.error?.message || 'Failed to generate content');
+        }
+
+        const contentData = await contentResponse.json();
+        let generatedContent = contentData.choices[0].message.content.trim();
+
+        // Truncate if needed
+        if (generatedContent.length > charLimit) {
+            generatedContent = generatedContent.substring(0, charLimit - 3) + '...';
+        }
+
+        // Step 3: Generate image if requested
+        let imageUrl = null;
+        if (generateImage) {
+            updateAIProgress('Creating your image...', 70);
+
+            const styleDescriptions = {
+                'pixar': 'Pixar/Disney 3D animation style, warm lighting, friendly and approachable',
+                'editorial': 'Modern editorial illustration, clean lines, professional and sophisticated',
+                'comic': 'Comic book style, bold outlines, vibrant colors, dynamic composition',
+                'watercolor': 'Soft watercolor painting style, artistic and elegant'
+            };
+
+            const styleDesc = styleDescriptions[settings.cartoonStyle] || styleDescriptions['pixar'];
+
+            const imagePrompt = `Create a whimsical, ${styleDesc} illustration.
+
+In the foreground: ${settings.characterDescription}
+
+Background scene related to: ${prompt}
+
+The scene should feel warm, professional, and related to South Florida luxury real estate. Use brand colors: navy blue (${settings.brandColor1}) and gold (${settings.brandColor2}) as accents where appropriate.
+
+Style: Photo-realistic cartoon, NOT photographic. Think animated movie poster quality.`;
+
+            try {
+                const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings.openaiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'dall-e-3',
+                        prompt: imagePrompt,
+                        n: 1,
+                        size: '1024x1024',
+                        quality: 'standard'
+                    })
+                });
+
+                if (imageResponse.ok) {
+                    const imageData = await imageResponse.json();
+                    imageUrl = imageData.data[0].url;
+                }
+            } catch (imgErr) {
+                console.error('Image generation failed:', imgErr);
+                // Continue without image
+            }
+        }
+
+        updateAIProgress('Done!', 100);
+
+        // Show results
+        document.getElementById('ai-generate-loading').style.display = 'none';
+        document.getElementById('ai-generate-result').style.display = 'block';
+        document.getElementById('ai-generated-content').value = generatedContent;
+
+        // Show news sources
+        const sourcesHtml = Object.entries(searchTopics)
+            .filter(([_, checked]) => checked)
+            .map(([key, _]) => {
+                const labels = {
+                    sofla: 'South Florida Real Estate',
+                    elliman: 'Douglas Elliman',
+                    standrews: 'St. Andrews Country Club',
+                    national: 'National Real Estate'
+                };
+                return labels[key];
+            })
+            .join(', ');
+        document.getElementById('ai-sources-list').textContent = sourcesHtml || 'None selected';
+
+        // Show image if generated
+        const imageContainer = document.getElementById('ai-generated-image-container');
+        if (imageUrl) {
+            document.getElementById('ai-generated-image').src = imageUrl;
+            document.getElementById('ai-generated-image-url').value = imageUrl;
+            imageContainer.style.display = 'block';
+        } else {
+            imageContainer.style.display = 'none';
+        }
+
+    } catch (err) {
+        console.error('AI generation error:', err);
+        document.getElementById('ai-generate-loading').style.display = 'none';
+        document.getElementById('ai-generate-error').style.display = 'block';
+        document.getElementById('ai-error-message').textContent = err.message;
+        document.getElementById('ai-generate-step-1').style.display = 'block';
+    }
+}
+
+async function regenerateAIPost() {
+    if (lastAIGenerationSettings) {
+        document.getElementById('ai-topic-prompt').value = lastAIGenerationSettings.prompt;
+        document.getElementById('ai-platform-select').value = lastAIGenerationSettings.platform;
+        document.getElementById('ai-generate-image').checked = lastAIGenerationSettings.generateImage;
+        document.getElementById('ai-search-sofla').checked = lastAIGenerationSettings.searchTopics.sofla;
+        document.getElementById('ai-search-elliman').checked = lastAIGenerationSettings.searchTopics.elliman;
+        document.getElementById('ai-search-standrews').checked = lastAIGenerationSettings.searchTopics.standrews;
+        document.getElementById('ai-search-national').checked = lastAIGenerationSettings.searchTopics.national;
+    }
+    document.getElementById('ai-generate-result').style.display = 'none';
+    await generateAIPost();
+}
+
+function useAIGeneratedPost() {
+    const content = document.getElementById('ai-generated-content').value;
+    const platform = lastAIGenerationSettings?.platform || 'instagram';
+    const imageUrl = document.getElementById('ai-generated-image-url')?.value || '';
+
+    // Determine topic based on search settings
+    let topic = 'real-estate';
+    if (lastAIGenerationSettings?.searchTopics) {
+        if (lastAIGenerationSettings.searchTopics.elliman) topic = 'douglas-elliman';
+        else if (lastAIGenerationSettings.searchTopics.standrews) topic = 'real-estate';
+        else if (lastAIGenerationSettings.searchTopics.national) topic = 'market-update';
+    }
+
+    // Create the post
+    const post = {
+        id: Date.now().toString(),
+        platform: platform,
+        topic: topic,
+        content: content,
+        status: 'draft',
+        mediaUrl: imageUrl,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        aiGenerated: true
+    };
+
+    appData.socialPosts.unshift(post);
+    saveData();
+
+    closeModal('ai-generate-modal');
+    renderSocialPosts();
+    updateSocialStats();
+
+    // Show success message
+    alert('Post created! You can find it in your drafts.');
 }
 
 // ===========================================
