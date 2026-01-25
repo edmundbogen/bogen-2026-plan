@@ -2904,12 +2904,11 @@ Incorporate visual elements that connect to the topic while maintaining the luxu
                 try {
                     updateAIProgress('Generating with Flux...', 75);
 
-                    // Create prediction using Flux on Replicate
-                    const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
+                    // Create prediction using Flux via Cloudflare Worker proxy
+                    const createResponse = await fetch('https://replicate-proxy.edmund-9a2.workers.dev/predictions', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${replicateKey}`
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             version: 'black-forest-labs/flux-schnell',
@@ -2937,9 +2936,9 @@ Incorporate visual elements that connect to the topic while maintaining the luxu
                     const maxAttempts = 60;
 
                     while (attempts < maxAttempts) {
-                        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+                        const statusResponse = await fetch(`https://replicate-proxy.edmund-9a2.workers.dev/predictions/${predictionId}`, {
                             headers: {
-                                'Authorization': `Bearer ${replicateKey}`
+                                'Content-Type': 'application/json'
                             }
                         });
 
