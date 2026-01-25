@@ -2820,10 +2820,10 @@ Write only the post content, nothing else.`;
             updateAIProgress('Creating your image...', 70);
 
             const styleDescriptions = {
-                'pixar': 'Pixar/Disney 3D animation style, warm lighting, friendly and approachable',
-                'editorial': 'Modern editorial illustration, clean lines, professional and sophisticated',
-                'comic': 'Comic book style, bold outlines, vibrant colors, dynamic composition',
-                'watercolor': 'Soft watercolor painting style, artistic and elegant'
+                'chaos': 'Photo-realistic editorial magazine illustration style. The main subject is calm, composed, and confident in the center foreground with hands folded. Behind them is a chaotic, busy scene with multiple exaggerated cartoon people in stressed expressions - yelling into phones, waving papers, looking frantic. Rich saturated colors, detailed stylized faces, real estate themed elements like For Sale signs and Open House signs visible in background. Magazine cover quality illustration.',
+                'friendly': 'Warm, friendly cartoon illustration on a textured vintage paper background with a slight sepia/tan tone. Clean character illustration with simplified but recognizable features. Whimsical hand-drawn icons and doodles floating in the background (gears, lightbulbs, clipboards, checkmarks). Softer, approachable feel. Think editorial illustration meets greeting card style.',
+                'editorial': 'Clean modern editorial illustration, professional magazine quality, bold confident pose, sophisticated color palette with navy and gold accents',
+                'dynamic': 'Dynamic action-style illustration with dramatic angles, motion lines, and energetic composition. Bold colors and confident pose.'
             };
 
             const styleDesc = styleDescriptions[settings.cartoonStyle] || styleDescriptions['pixar'];
