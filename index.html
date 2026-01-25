@@ -3053,13 +3053,24 @@
                             <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></small>
                         </div>
 
-                        <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #86efac;">
-                            <p style="font-size: 0.875rem; color: #166534; margin: 0;">
-                                <strong>Image Style:</strong> Your branded "Chaotic Real Estate" editorial cartoon style. No central figure - just the frantic scene with your signature look.
+                        <div class="form-group">
+                            <label>Replicate API Key <span style="font-weight: normal; color: var(--gray-500);">(for image generation)</span></label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="password" id="setting-replicate-key" placeholder="r8_..." style="flex: 1;">
+                                <button class="btn btn-secondary" onclick="toggleApiKeyVisibility('replicate')" style="padding: 0.5rem 0.75rem;">
+                                    <span id="api-key-toggle-icon-replicate">Show</span>
+                                </button>
+                            </div>
+                            <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/account/api-tokens</a></small>
+                        </div>
+
+                        <div style="background: linear-gradient(135deg, #fef3c7, #fef9c3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #fcd34d;">
+                            <p style="font-size: 0.875rem; color: #92400e; margin: 0;">
+                                <strong>Image Style:</strong> Photo-realistic Florida luxury lifestyle. Beautiful people, colorful settings, palm trees, waterfront, upscale interiors. Images match your post topic.
                             </p>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="display: none;">
                             <label>Brand Colors</label>
                             <div style="display: flex; gap: 1rem; align-items: center;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">

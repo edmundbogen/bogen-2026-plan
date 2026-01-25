@@ -2876,66 +2876,99 @@ Write only the post content, nothing else.`;
             generatedContent = generatedContent.substring(0, charLimit - 3) + '...';
         }
 
-        // Step 3: Generate branded scene image (Edmund Bogen signature style)
+        // Step 3: Generate photo-realistic Florida luxury image using Flux on Replicate
         let imageUrl = null;
         if (generateImage) {
-            updateAIProgress('Creating branded illustration...', 70);
+            updateAIProgress('Creating image...', 70);
 
-            // The Edmund Bogen signature style - based on the reference image
-            const styleBase = `Photo-realistic editorial cartoon illustration in magazine cover style. Rich saturated colors, warm lighting, blue sky with white clouds, suburban South Florida backdrop with palm trees and upscale homes.
+            const replicateKey = settings.replicateKey;
 
-DO NOT include any central figure or person in the foreground. Leave the center area open.
+            if (!replicateKey) {
+                window.lastImageError = 'Please add your Replicate API key in Settings to generate images.';
+            } else {
+                // Edmund Bogen signature photo style
+                const stylePrompt = `Photo-realistic, high-end lifestyle photography. South Florida luxury real estate aesthetic.
 
-The scene should show a CHAOTIC real estate environment with these elements scattered around the edges and background:
-- Multiple cartoon people with exaggerated stressed expressions yelling into cell phones
-- People frantically waving papers and documents
-- Real estate "For Sale" signs and "Open House" signs
-- People clutching money and contracts
-- Luxury cars in the background
-- Upscale suburban houses
-- Papers flying through the air
-- General sense of frantic real estate activity
+Subject: Beautiful, elegant woman (or women) in upscale setting. Mid-shot to close-up framing.
 
-Color palette: Navy blue (#1e3a5f), gold (#c9a962), warm skin tones, blue sky, green foliage, white clouds.
+Setting: Bright, colorful, sun-drenched Florida atmosphere. Could include: luxury waterfront property, palm trees, crystal blue water, upscale interior, golf course, yacht, poolside, modern architecture.
 
-Style: High-quality editorial cartoon like a magazine cover. NOT a photograph. Detailed stylized faces with exaggerated expressions. Professional illustration quality.`;
+Mood: Aspirational, warm, inviting, successful lifestyle. Golden hour lighting preferred.
 
-            const topicContext = `
-The specific topic/news for this image: ${prompt}
+Style: Professional real estate/lifestyle photography. Vibrant colors, sharp focus, magazine-quality.
 
-Incorporate visual elements related to this topic into the chaotic scene.`;
+THE IMAGE MUST RELATE TO THIS TOPIC: ${prompt}
 
-            try {
-                updateAIProgress('Generating with DALL-E...', 80);
+Incorporate visual elements that connect to the topic while maintaining the luxury Florida lifestyle aesthetic.`;
 
-                const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${settings.openaiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'dall-e-3',
-                        prompt: styleBase + topicContext,
-                        n: 1,
-                        size: '1024x1024',
-                        quality: 'hd',
-                        style: 'vivid'
-                    })
-                });
+                try {
+                    updateAIProgress('Generating with Flux...', 75);
 
-                if (dalleResponse.ok) {
-                    const dalleData = await dalleResponse.json();
-                    imageUrl = dalleData.data[0].url;
-                } else {
-                    const dalleError = await dalleResponse.json();
-                    console.error('DALL-E error:', dalleError);
-                    window.lastImageError = dalleError.error?.message || 'Image generation failed';
+                    // Create prediction using Flux on Replicate
+                    const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${replicateKey}`
+                        },
+                        body: JSON.stringify({
+                            version: 'black-forest-labs/flux-schnell',
+                            input: {
+                                prompt: stylePrompt,
+                                num_outputs: 1,
+                                aspect_ratio: '1:1',
+                                output_format: 'webp',
+                                output_quality: 90
+                            }
+                        })
+                    });
+
+                    if (!createResponse.ok) {
+                        const error = await createResponse.json();
+                        throw new Error(error.detail || 'Failed to start image generation');
+                    }
+
+                    const prediction = await createResponse.json();
+                    let predictionId = prediction.id;
+
+                    // Poll for completion
+                    updateAIProgress('Rendering image...', 80);
+                    let attempts = 0;
+                    const maxAttempts = 60;
+
+                    while (attempts < maxAttempts) {
+                        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${replicateKey}`
+                            }
+                        });
+
+                        const status = await statusResponse.json();
+
+                        if (status.status === 'succeeded') {
+                            imageUrl = Array.isArray(status.output) ? status.output[0] : status.output;
+                            break;
+                        } else if (status.status === 'failed') {
+                            throw new Error(status.error || 'Image generation failed');
+                        } else if (status.status === 'canceled') {
+                            throw new Error('Image generation was canceled');
+                        }
+
+                        const progress = 80 + Math.min(attempts, 15);
+                        updateAIProgress('Rendering image...', progress);
+
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        attempts++;
+                    }
+
+                    if (!imageUrl && attempts >= maxAttempts) {
+                        throw new Error('Image generation timed out');
+                    }
+
+                } catch (imgErr) {
+                    console.error('Flux image generation failed:', imgErr);
+                    window.lastImageError = imgErr.message;
                 }
-
-            } catch (imgErr) {
-                console.error('Image generation failed:', imgErr);
-                window.lastImageError = imgErr.message;
             }
         }
 
