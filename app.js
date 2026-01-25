@@ -2610,6 +2610,7 @@ function getAISettings() {
     }
     return {
         openaiKey: '',
+        replicateKey: '',
         characterDescription: '',
         cartoonStyle: 'chaos',
         brandColor1: '#1e3a5f',
@@ -2669,12 +2670,14 @@ function clearReferencePhoto() {
 function loadAISettingsForm() {
     const settings = getAISettings();
     const keyInput = document.getElementById('setting-openai-key');
+    const replicateKeyInput = document.getElementById('setting-replicate-key');
     const descInput = document.getElementById('setting-character-description');
     const styleInput = document.getElementById('setting-cartoon-style');
     const color1Input = document.getElementById('setting-brand-color-1');
     const color2Input = document.getElementById('setting-brand-color-2');
 
     if (keyInput) keyInput.value = settings.openaiKey || '';
+    if (replicateKeyInput) replicateKeyInput.value = settings.replicateKey || '';
     if (descInput) descInput.value = settings.characterDescription || '';
     if (styleInput) styleInput.value = settings.cartoonStyle || 'chaos';
     if (color1Input) color1Input.value = settings.brandColor1 || '#1e3a5f';
@@ -2690,6 +2693,7 @@ function loadAISettingsForm() {
 function saveAISettings() {
     const settings = {
         openaiKey: document.getElementById('setting-openai-key')?.value || '',
+        replicateKey: document.getElementById('setting-replicate-key')?.value || '',
         characterDescription: document.getElementById('setting-character-description')?.value || '',
         cartoonStyle: document.getElementById('setting-cartoon-style')?.value || 'chaos',
         brandColor1: document.getElementById('setting-brand-color-1')?.value || '#1e3a5f',
@@ -2705,9 +2709,11 @@ function saveAISettings() {
     }
 }
 
-function toggleApiKeyVisibility() {
-    const input = document.getElementById('setting-openai-key');
-    const toggle = document.getElementById('api-key-toggle-icon');
+function toggleApiKeyVisibility(provider = 'openai') {
+    const input = document.getElementById(`setting-${provider}-key`);
+    const toggle = document.getElementById(`api-key-toggle-icon-${provider}`);
+
+    if (!input || !toggle) return;
 
     if (input.type === 'password') {
         input.type = 'text';
@@ -2870,166 +2876,104 @@ Write only the post content, nothing else.`;
             generatedContent = generatedContent.substring(0, charLimit - 3) + '...';
         }
 
-        // Step 3: Generate image if requested
+        // Step 3: Generate image if requested (using Replicate InstantID)
         let imageUrl = null;
         if (generateImage) {
             updateAIProgress('Creating your cartoon image...', 70);
 
             const referencePhoto = getReferencePhoto();
+            const replicateKey = settings.replicateKey;
 
-            const styleDescriptions = {
-                'chaos': 'Transform this photo into a photo-realistic editorial magazine illustration style cartoon. Keep the person\'s exact likeness, features, glasses, clothing, and pose. The person should be calm and composed in the center foreground. Behind them, add a chaotic, busy scene with multiple exaggerated cartoon people in stressed expressions - yelling into phones, waving papers, looking frantic. Include real estate themed elements like For Sale signs and Open House signs. Rich saturated colors, detailed stylized faces. Magazine cover quality illustration.',
-                'friendly': 'Transform this photo into a warm, friendly cartoon illustration on a textured vintage paper background with a slight sepia/tan tone. Keep the person\'s exact likeness, features, glasses, and clothing. Clean character illustration with simplified but clearly recognizable features. Add whimsical hand-drawn icons and doodles floating in the background (gears, lightbulbs, clipboards, checkmarks). Softer, approachable feel like an editorial illustration.',
-                'editorial': 'Transform this photo into a clean modern editorial illustration cartoon. Keep the person\'s exact likeness, features, glasses, and clothing. Professional magazine quality, bold confident pose, sophisticated color palette with navy and gold accents.',
-                'dynamic': 'Transform this photo into a dynamic action-style cartoon illustration. Keep the person\'s exact likeness, features, glasses, and clothing. Add dramatic angles, motion lines, and energetic composition. Bold colors and confident pose.'
-            };
+            if (!referencePhoto) {
+                window.lastImageError = 'Please upload a reference photo in Settings first.';
+            } else if (!replicateKey) {
+                window.lastImageError = 'Please add your Replicate API key in Settings to generate images that look like you.';
+            } else {
+                const stylePrompts = {
+                    'chaos': `A professional editorial magazine cover illustration of this person, calm and composed in the center, with a chaotic busy scene behind them showing stressed people yelling into phones, waving papers, real estate For Sale signs, Open House signs. Rich saturated colors, detailed cartoon style. Topic: ${prompt}`,
+                    'friendly': `A warm friendly cartoon illustration of this person on a textured vintage paper background with sepia tones. Whimsical hand-drawn icons floating in background (gears, lightbulbs, clipboards). Soft approachable editorial style. Topic: ${prompt}`,
+                    'editorial': `A clean modern editorial illustration of this person in professional magazine quality. Bold confident pose, sophisticated navy and gold color palette. Topic: ${prompt}`,
+                    'dynamic': `A dynamic action-style cartoon illustration of this person with dramatic angles, motion lines, energetic composition. Bold vibrant colors. Topic: ${prompt}`
+                };
 
-            const styleDesc = styleDescriptions[settings.cartoonStyle] || styleDescriptions['chaos'];
+                const imagePrompt = stylePrompts[settings.cartoonStyle] || stylePrompts['chaos'];
 
-            try {
-                if (referencePhoto) {
-                    // Use GPT-4o with image input to transform the photo
-                    const imagePrompt = `${styleDesc}
+                try {
+                    // Extract base64 data from data URL
+                    const base64Data = referencePhoto.split(',')[1];
 
-The background scene should relate to this topic: ${prompt}
+                    // Create prediction using Replicate's InstantID model
+                    updateAIProgress('Sending to Replicate...', 75);
 
-Additional context: This is for a South Florida luxury real estate professional's social media. ${settings.characterDescription ? 'Additional details: ' + settings.characterDescription : ''}
-
-IMPORTANT:
-- Maintain the person's recognizable likeness - they should clearly look like the same person
-- Keep their glasses, clothing style, and distinguishing features
-- Make it a high-quality cartoon/illustration, NOT a photograph
-- The style should be like the illustrations used in magazine covers or animated movie posters`;
-
-                    const imageResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                    const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${settings.openaiKey}`
+                            'Authorization': `Bearer ${replicateKey}`
                         },
                         body: JSON.stringify({
-                            model: 'gpt-4o',
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: [
-                                        {
-                                            type: 'image_url',
-                                            image_url: {
-                                                url: referencePhoto
-                                            }
-                                        },
-                                        {
-                                            type: 'text',
-                                            text: imagePrompt
-                                        }
-                                    ]
-                                }
-                            ],
-                            max_tokens: 4096
+                            version: 'c457e1a884062ab95f058466534acd45e2ea98c5d9be6b0a9d84e71c63e28187',
+                            input: {
+                                image: referencePhoto,
+                                prompt: imagePrompt + '. High quality cartoon illustration style, NOT a photograph, maintain exact facial likeness and features including glasses.',
+                                negative_prompt: 'photograph, realistic, blurry, low quality, distorted face, wrong glasses, missing glasses',
+                                style_name: 'Watercolor',
+                                num_steps: 30,
+                                guidance_scale: 5,
+                                ip_adapter_scale: 0.8,
+                                controlnet_conditioning_scale: 0.8
+                            }
                         })
                     });
 
-                    if (imageResponse.ok) {
-                        const imageData = await imageResponse.json();
-                        // Check if the response contains an image
-                        const content = imageData.choices[0]?.message?.content;
-
-                        // GPT-4o may return the image in different formats
-                        // Check for image in the response
-                        if (imageData.choices[0]?.message?.content_parts) {
-                            const imagePart = imageData.choices[0].message.content_parts.find(p => p.type === 'image');
-                            if (imagePart) {
-                                imageUrl = imagePart.image_url?.url || `data:image/png;base64,${imagePart.image}`;
-                            }
-                        }
-
-                        // If no image in response, GPT-4o might not support image generation yet
-                        // Fall back to DALL-E 3 with enhanced description
-                        if (!imageUrl) {
-                            console.log('GPT-4o did not return an image, falling back to DALL-E 3');
-                            updateAIProgress('Generating with DALL-E...', 80);
-
-                            // Use GPT-4o to analyze the photo and create a detailed description first
-                            const descResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${settings.openaiKey}`
-                                },
-                                body: JSON.stringify({
-                                    model: 'gpt-4o',
-                                    messages: [
-                                        {
-                                            role: 'user',
-                                            content: [
-                                                {
-                                                    type: 'image_url',
-                                                    image_url: {
-                                                        url: referencePhoto
-                                                    }
-                                                },
-                                                {
-                                                    type: 'text',
-                                                    text: 'Describe this person in precise detail for an AI image generator. Include: exact hair color/style/length, facial features, skin tone, glasses (frame shape, color), exact clothing (colors, patterns, style), accessories, pose, expression. Be extremely specific so another AI could recreate this exact person as a cartoon. Output ONLY the description, nothing else.'
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    max_tokens: 500
-                                })
-                            });
-
-                            let personDescription = settings.characterDescription || '';
-                            if (descResponse.ok) {
-                                const descData = await descResponse.json();
-                                personDescription = descData.choices[0]?.message?.content || personDescription;
-                            }
-
-                            // Now use DALL-E 3 with the detailed description
-                            const dallePrompt = `Create a ${styleDescriptions[settings.cartoonStyle].split('.')[0]} cartoon illustration.
-
-SUBJECT (must match exactly): ${personDescription}
-
-BACKGROUND: Scene related to: ${prompt}
-
-Style: High-quality cartoon illustration like a magazine cover. NOT a photograph. The subject must be clearly recognizable with all their features intact.`;
-
-                            const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${settings.openaiKey}`
-                                },
-                                body: JSON.stringify({
-                                    model: 'dall-e-3',
-                                    prompt: dallePrompt,
-                                    n: 1,
-                                    size: '1024x1024',
-                                    quality: 'hd'
-                                })
-                            });
-
-                            if (dalleResponse.ok) {
-                                const dalleData = await dalleResponse.json();
-                                imageUrl = dalleData.data[0].url;
-                            } else {
-                                const dalleError = await dalleResponse.json();
-                                window.lastImageError = dalleError.error?.message || 'DALL-E generation failed';
-                            }
-                        }
-                    } else {
-                        const imgError = await imageResponse.json();
-                        console.error('Image generation error:', imgError);
-                        window.lastImageError = imgError.error?.message || 'Unknown image generation error';
+                    if (!createResponse.ok) {
+                        const error = await createResponse.json();
+                        throw new Error(error.detail || 'Failed to start image generation');
                     }
-                } else {
-                    // No reference photo - show error
-                    window.lastImageError = 'Please upload a reference photo in Settings first.';
+
+                    const prediction = await createResponse.json();
+                    let predictionId = prediction.id;
+
+                    // Poll for completion
+                    updateAIProgress('Generating your likeness...', 80);
+                    let attempts = 0;
+                    const maxAttempts = 60; // 60 seconds max
+
+                    while (attempts < maxAttempts) {
+                        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${replicateKey}`
+                            }
+                        });
+
+                        const status = await statusResponse.json();
+
+                        if (status.status === 'succeeded') {
+                            imageUrl = status.output?.[0] || status.output;
+                            break;
+                        } else if (status.status === 'failed') {
+                            throw new Error(status.error || 'Image generation failed');
+                        } else if (status.status === 'canceled') {
+                            throw new Error('Image generation was canceled');
+                        }
+
+                        // Update progress
+                        const progress = 80 + Math.min(attempts, 15);
+                        updateAIProgress('Generating your likeness...', progress);
+
+                        // Wait 1 second before polling again
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        attempts++;
+                    }
+
+                    if (!imageUrl && attempts >= maxAttempts) {
+                        throw new Error('Image generation timed out');
+                    }
+
+                } catch (imgErr) {
+                    console.error('Replicate image generation failed:', imgErr);
+                    window.lastImageError = imgErr.message;
                 }
-            } catch (imgErr) {
-                console.error('Image generation failed:', imgErr);
-                window.lastImageError = imgErr.message;
             }
         }
 

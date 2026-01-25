@@ -3043,14 +3043,25 @@
                         </p>
 
                         <div class="form-group">
-                            <label>OpenAI API Key</label>
+                            <label>OpenAI API Key <span style="font-weight: normal; color: var(--gray-500);">(for text generation)</span></label>
                             <div style="display: flex; gap: 0.5rem;">
                                 <input type="password" id="setting-openai-key" placeholder="sk-..." style="flex: 1;">
-                                <button class="btn btn-secondary" onclick="toggleApiKeyVisibility()" style="padding: 0.5rem 0.75rem;">
-                                    <span id="api-key-toggle-icon">Show</span>
+                                <button class="btn btn-secondary" onclick="toggleApiKeyVisibility('openai')" style="padding: 0.5rem 0.75rem;">
+                                    <span id="api-key-toggle-icon-openai">Show</span>
                                 </button>
                             </div>
                             <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Replicate API Key <span style="font-weight: normal; color: var(--gray-500);">(for cartoon images)</span></label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="password" id="setting-replicate-key" placeholder="r8_..." style="flex: 1;">
+                                <button class="btn btn-secondary" onclick="toggleApiKeyVisibility('replicate')" style="padding: 0.5rem 0.75rem;">
+                                    <span id="api-key-toggle-icon-replicate">Show</span>
+                                </button>
+                            </div>
+                            <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/account/api-tokens</a> - This creates cartoons that look like YOU</small>
                         </div>
 
                         <div class="form-group">
