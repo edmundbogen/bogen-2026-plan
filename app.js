@@ -2857,10 +2857,15 @@ Style: Photo-realistic cartoon, NOT photographic. Think animated movie poster qu
                 if (imageResponse.ok) {
                     const imageData = await imageResponse.json();
                     imageUrl = imageData.data[0].url;
+                } else {
+                    const imgError = await imageResponse.json();
+                    console.error('Image generation error:', imgError);
+                    // Store error to show user
+                    window.lastImageError = imgError.error?.message || 'Unknown image generation error';
                 }
             } catch (imgErr) {
                 console.error('Image generation failed:', imgErr);
-                // Continue without image
+                window.lastImageError = imgErr.message;
             }
         }
 
@@ -2894,6 +2899,13 @@ Style: Photo-realistic cartoon, NOT photographic. Think animated movie poster qu
             imageContainer.style.display = 'block';
         } else {
             imageContainer.style.display = 'none';
+            // Show image error if there was one
+            if (generateImage && window.lastImageError) {
+                const errorDiv = document.getElementById('ai-generate-error');
+                errorDiv.style.display = 'block';
+                document.getElementById('ai-error-message').textContent = 'Image generation failed: ' + window.lastImageError;
+                window.lastImageError = null;
+            }
         }
 
     } catch (err) {
