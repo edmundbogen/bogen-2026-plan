@@ -2595,8 +2595,9 @@ function initializeMobileNavigation() {
 // ===========================================
 
 const AI_SETTINGS_KEY = 'bogen2026_ai_settings';
+const AI_PHOTO_KEY = 'bogen2026_ai_photo';
 
-const DEFAULT_CHARACTER_DESCRIPTION = `Distinguished professional man in his mid-50s with short, neatly styled dark hair with natural gray at the temples. He wears black rectangular glasses with thick frames. Dressed in a tailored navy blue blazer over a white and blue plaid button-up shirt, with a colorful striped pocket square (pink, green, white). Gold watch on wrist. Confident, approachable expression with a subtle knowing smile. Clean-shaven, fit appearance. South Florida luxury real estate professional.`;
+const DEFAULT_CHARACTER_DESCRIPTION = '';
 
 function getAISettings() {
     try {
@@ -2609,11 +2610,60 @@ function getAISettings() {
     }
     return {
         openaiKey: '',
-        characterDescription: DEFAULT_CHARACTER_DESCRIPTION,
-        cartoonStyle: 'pixar',
+        characterDescription: '',
+        cartoonStyle: 'chaos',
         brandColor1: '#1e3a5f',
         brandColor2: '#c9a962'
     };
+}
+
+function getReferencePhoto() {
+    try {
+        return localStorage.getItem(AI_PHOTO_KEY) || null;
+    } catch (err) {
+        console.error('Failed to load reference photo:', err);
+        return null;
+    }
+}
+
+function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file size (max 4MB for localStorage)
+    if (file.size > 4 * 1024 * 1024) {
+        alert('Photo is too large. Please use an image under 4MB.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result;
+        try {
+            localStorage.setItem(AI_PHOTO_KEY, base64);
+            updatePhotoPreview(base64);
+            console.log('Reference photo saved successfully');
+        } catch (err) {
+            console.error('Failed to save photo:', err);
+            alert('Failed to save photo. It may be too large for browser storage.');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function updatePhotoPreview(base64) {
+    const preview = document.getElementById('reference-photo-preview');
+    if (preview && base64) {
+        preview.innerHTML = `<img src="${base64}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    } else if (preview) {
+        preview.innerHTML = '<span style="color: var(--gray-400); font-size: 0.75rem; text-align: center; padding: 1rem;">No photo uploaded</span>';
+    }
+}
+
+function clearReferencePhoto() {
+    localStorage.removeItem(AI_PHOTO_KEY);
+    updatePhotoPreview(null);
+    document.getElementById('reference-photo-input').value = '';
 }
 
 function loadAISettingsForm() {
@@ -2625,17 +2675,23 @@ function loadAISettingsForm() {
     const color2Input = document.getElementById('setting-brand-color-2');
 
     if (keyInput) keyInput.value = settings.openaiKey || '';
-    if (descInput) descInput.value = settings.characterDescription || DEFAULT_CHARACTER_DESCRIPTION;
-    if (styleInput) styleInput.value = settings.cartoonStyle || 'pixar';
+    if (descInput) descInput.value = settings.characterDescription || '';
+    if (styleInput) styleInput.value = settings.cartoonStyle || 'chaos';
     if (color1Input) color1Input.value = settings.brandColor1 || '#1e3a5f';
     if (color2Input) color2Input.value = settings.brandColor2 || '#c9a962';
+
+    // Load reference photo preview
+    const savedPhoto = getReferencePhoto();
+    if (savedPhoto) {
+        updatePhotoPreview(savedPhoto);
+    }
 }
 
 function saveAISettings() {
     const settings = {
         openaiKey: document.getElementById('setting-openai-key')?.value || '',
-        characterDescription: document.getElementById('setting-character-description')?.value || DEFAULT_CHARACTER_DESCRIPTION,
-        cartoonStyle: document.getElementById('setting-cartoon-style')?.value || 'pixar',
+        characterDescription: document.getElementById('setting-character-description')?.value || '',
+        cartoonStyle: document.getElementById('setting-cartoon-style')?.value || 'chaos',
         brandColor1: document.getElementById('setting-brand-color-1')?.value || '#1e3a5f',
         brandColor2: document.getElementById('setting-brand-color-2')?.value || '#c9a962'
     };
@@ -2817,51 +2873,159 @@ Write only the post content, nothing else.`;
         // Step 3: Generate image if requested
         let imageUrl = null;
         if (generateImage) {
-            updateAIProgress('Creating your image...', 70);
+            updateAIProgress('Creating your cartoon image...', 70);
+
+            const referencePhoto = getReferencePhoto();
 
             const styleDescriptions = {
-                'chaos': 'Photo-realistic editorial magazine illustration style. The main subject is calm, composed, and confident in the center foreground with hands folded. Behind them is a chaotic, busy scene with multiple exaggerated cartoon people in stressed expressions - yelling into phones, waving papers, looking frantic. Rich saturated colors, detailed stylized faces, real estate themed elements like For Sale signs and Open House signs visible in background. Magazine cover quality illustration.',
-                'friendly': 'Warm, friendly cartoon illustration on a textured vintage paper background with a slight sepia/tan tone. Clean character illustration with simplified but recognizable features. Whimsical hand-drawn icons and doodles floating in the background (gears, lightbulbs, clipboards, checkmarks). Softer, approachable feel. Think editorial illustration meets greeting card style.',
-                'editorial': 'Clean modern editorial illustration, professional magazine quality, bold confident pose, sophisticated color palette with navy and gold accents',
-                'dynamic': 'Dynamic action-style illustration with dramatic angles, motion lines, and energetic composition. Bold colors and confident pose.'
+                'chaos': 'Transform this photo into a photo-realistic editorial magazine illustration style cartoon. Keep the person\'s exact likeness, features, glasses, clothing, and pose. The person should be calm and composed in the center foreground. Behind them, add a chaotic, busy scene with multiple exaggerated cartoon people in stressed expressions - yelling into phones, waving papers, looking frantic. Include real estate themed elements like For Sale signs and Open House signs. Rich saturated colors, detailed stylized faces. Magazine cover quality illustration.',
+                'friendly': 'Transform this photo into a warm, friendly cartoon illustration on a textured vintage paper background with a slight sepia/tan tone. Keep the person\'s exact likeness, features, glasses, and clothing. Clean character illustration with simplified but clearly recognizable features. Add whimsical hand-drawn icons and doodles floating in the background (gears, lightbulbs, clipboards, checkmarks). Softer, approachable feel like an editorial illustration.',
+                'editorial': 'Transform this photo into a clean modern editorial illustration cartoon. Keep the person\'s exact likeness, features, glasses, and clothing. Professional magazine quality, bold confident pose, sophisticated color palette with navy and gold accents.',
+                'dynamic': 'Transform this photo into a dynamic action-style cartoon illustration. Keep the person\'s exact likeness, features, glasses, and clothing. Add dramatic angles, motion lines, and energetic composition. Bold colors and confident pose.'
             };
 
-            const styleDesc = styleDescriptions[settings.cartoonStyle] || styleDescriptions['pixar'];
-
-            const imagePrompt = `Create a whimsical, ${styleDesc} illustration.
-
-In the foreground: ${settings.characterDescription}
-
-Background scene related to: ${prompt}
-
-The scene should feel warm, professional, and related to South Florida luxury real estate. Use brand colors: navy blue (${settings.brandColor1}) and gold (${settings.brandColor2}) as accents where appropriate.
-
-Style: Photo-realistic cartoon, NOT photographic. Think animated movie poster quality.`;
+            const styleDesc = styleDescriptions[settings.cartoonStyle] || styleDescriptions['chaos'];
 
             try {
-                const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${settings.openaiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'dall-e-3',
-                        prompt: imagePrompt,
-                        n: 1,
-                        size: '1024x1024',
-                        quality: 'standard'
-                    })
-                });
+                if (referencePhoto) {
+                    // Use GPT-4o with image input to transform the photo
+                    const imagePrompt = `${styleDesc}
 
-                if (imageResponse.ok) {
-                    const imageData = await imageResponse.json();
-                    imageUrl = imageData.data[0].url;
+The background scene should relate to this topic: ${prompt}
+
+Additional context: This is for a South Florida luxury real estate professional's social media. ${settings.characterDescription ? 'Additional details: ' + settings.characterDescription : ''}
+
+IMPORTANT:
+- Maintain the person's recognizable likeness - they should clearly look like the same person
+- Keep their glasses, clothing style, and distinguishing features
+- Make it a high-quality cartoon/illustration, NOT a photograph
+- The style should be like the illustrations used in magazine covers or animated movie posters`;
+
+                    const imageResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${settings.openaiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-4o',
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: [
+                                        {
+                                            type: 'image_url',
+                                            image_url: {
+                                                url: referencePhoto
+                                            }
+                                        },
+                                        {
+                                            type: 'text',
+                                            text: imagePrompt
+                                        }
+                                    ]
+                                }
+                            ],
+                            max_tokens: 4096
+                        })
+                    });
+
+                    if (imageResponse.ok) {
+                        const imageData = await imageResponse.json();
+                        // Check if the response contains an image
+                        const content = imageData.choices[0]?.message?.content;
+
+                        // GPT-4o may return the image in different formats
+                        // Check for image in the response
+                        if (imageData.choices[0]?.message?.content_parts) {
+                            const imagePart = imageData.choices[0].message.content_parts.find(p => p.type === 'image');
+                            if (imagePart) {
+                                imageUrl = imagePart.image_url?.url || `data:image/png;base64,${imagePart.image}`;
+                            }
+                        }
+
+                        // If no image in response, GPT-4o might not support image generation yet
+                        // Fall back to DALL-E 3 with enhanced description
+                        if (!imageUrl) {
+                            console.log('GPT-4o did not return an image, falling back to DALL-E 3');
+                            updateAIProgress('Generating with DALL-E...', 80);
+
+                            // Use GPT-4o to analyze the photo and create a detailed description first
+                            const descResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${settings.openaiKey}`
+                                },
+                                body: JSON.stringify({
+                                    model: 'gpt-4o',
+                                    messages: [
+                                        {
+                                            role: 'user',
+                                            content: [
+                                                {
+                                                    type: 'image_url',
+                                                    image_url: {
+                                                        url: referencePhoto
+                                                    }
+                                                },
+                                                {
+                                                    type: 'text',
+                                                    text: 'Describe this person in precise detail for an AI image generator. Include: exact hair color/style/length, facial features, skin tone, glasses (frame shape, color), exact clothing (colors, patterns, style), accessories, pose, expression. Be extremely specific so another AI could recreate this exact person as a cartoon. Output ONLY the description, nothing else.'
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    max_tokens: 500
+                                })
+                            });
+
+                            let personDescription = settings.characterDescription || '';
+                            if (descResponse.ok) {
+                                const descData = await descResponse.json();
+                                personDescription = descData.choices[0]?.message?.content || personDescription;
+                            }
+
+                            // Now use DALL-E 3 with the detailed description
+                            const dallePrompt = `Create a ${styleDescriptions[settings.cartoonStyle].split('.')[0]} cartoon illustration.
+
+SUBJECT (must match exactly): ${personDescription}
+
+BACKGROUND: Scene related to: ${prompt}
+
+Style: High-quality cartoon illustration like a magazine cover. NOT a photograph. The subject must be clearly recognizable with all their features intact.`;
+
+                            const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${settings.openaiKey}`
+                                },
+                                body: JSON.stringify({
+                                    model: 'dall-e-3',
+                                    prompt: dallePrompt,
+                                    n: 1,
+                                    size: '1024x1024',
+                                    quality: 'hd'
+                                })
+                            });
+
+                            if (dalleResponse.ok) {
+                                const dalleData = await dalleResponse.json();
+                                imageUrl = dalleData.data[0].url;
+                            } else {
+                                const dalleError = await dalleResponse.json();
+                                window.lastImageError = dalleError.error?.message || 'DALL-E generation failed';
+                            }
+                        }
+                    } else {
+                        const imgError = await imageResponse.json();
+                        console.error('Image generation error:', imgError);
+                        window.lastImageError = imgError.error?.message || 'Unknown image generation error';
+                    }
                 } else {
-                    const imgError = await imageResponse.json();
-                    console.error('Image generation error:', imgError);
-                    // Store error to show user
-                    window.lastImageError = imgError.error?.message || 'Unknown image generation error';
+                    // No reference photo - show error
+                    window.lastImageError = 'Please upload a reference photo in Settings first.';
                 }
             } catch (imgErr) {
                 console.error('Image generation failed:', imgErr);

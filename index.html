@@ -3054,9 +3054,33 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Character Description (for cartoon images)</label>
-                            <textarea id="setting-character-description" rows="4" placeholder="Distinguished man in his 50s with short gray-flecked dark hair, black rectangular glasses, navy blazer, plaid shirt, colorful pocket square..."></textarea>
-                            <small style="color: var(--gray-500); font-size: 0.75rem;">This description is used to generate consistent cartoon images of you</small>
+                            <label style="font-weight: 600;">Your Reference Photo</label>
+                            <p style="font-size: 0.8125rem; color: var(--gray-600); margin-bottom: 0.75rem;">
+                                Upload a photo of yourself. This will be transformed into a cartoon for your posts.
+                            </p>
+                            <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                                <div id="reference-photo-preview" style="width: 150px; height: 150px; border: 2px dashed var(--gray-300); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--gray-100);">
+                                    <span style="color: var(--gray-400); font-size: 0.75rem; text-align: center; padding: 1rem;">No photo uploaded</span>
+                                </div>
+                                <div style="flex: 1; min-width: 200px;">
+                                    <input type="file" id="reference-photo-input" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+                                    <button class="btn btn-secondary" onclick="document.getElementById('reference-photo-input').click()" style="margin-bottom: 0.5rem;">
+                                        Upload Photo
+                                    </button>
+                                    <button class="btn btn-outline" onclick="clearReferencePhoto()" style="margin-bottom: 0.5rem; margin-left: 0.5rem;">
+                                        Clear
+                                    </button>
+                                    <small style="display: block; color: var(--gray-500); font-size: 0.75rem;">
+                                        Best results: Clear headshot, good lighting, front-facing. JPG or PNG.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Additional Description (optional)</label>
+                            <textarea id="setting-character-description" rows="2" placeholder="Any additional details about your appearance or style preferences..."></textarea>
+                            <small style="color: var(--gray-500); font-size: 0.75rem;">Add details the AI should know (e.g., "always include my gold watch")</small>
                         </div>
 
                         <div class="form-group">
