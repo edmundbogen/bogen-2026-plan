@@ -3053,55 +3053,10 @@
                             <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></small>
                         </div>
 
-                        <div class="form-group">
-                            <label>Replicate API Key <span style="font-weight: normal; color: var(--gray-500);">(for cartoon images)</span></label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="password" id="setting-replicate-key" placeholder="r8_..." style="flex: 1;">
-                                <button class="btn btn-secondary" onclick="toggleApiKeyVisibility('replicate')" style="padding: 0.5rem 0.75rem;">
-                                    <span id="api-key-toggle-icon-replicate">Show</span>
-                                </button>
-                            </div>
-                            <small style="color: var(--gray-500); font-size: 0.75rem;">Get your key at <a href="https://replicate.com/account/api-tokens" target="_blank">replicate.com/account/api-tokens</a> - This creates cartoons that look like YOU</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label style="font-weight: 600;">Your Reference Photo</label>
-                            <p style="font-size: 0.8125rem; color: var(--gray-600); margin-bottom: 0.75rem;">
-                                Upload a photo of yourself. This will be transformed into a cartoon for your posts.
+                        <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #86efac;">
+                            <p style="font-size: 0.875rem; color: #166534; margin: 0;">
+                                <strong>Image Style:</strong> Your branded "Chaotic Real Estate" editorial cartoon style. No central figure - just the frantic scene with your signature look.
                             </p>
-                            <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
-                                <div id="reference-photo-preview" style="width: 150px; height: 150px; border: 2px dashed var(--gray-300); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--gray-100);">
-                                    <span style="color: var(--gray-400); font-size: 0.75rem; text-align: center; padding: 1rem;">No photo uploaded</span>
-                                </div>
-                                <div style="flex: 1; min-width: 200px;">
-                                    <input type="file" id="reference-photo-input" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
-                                    <button class="btn btn-secondary" onclick="document.getElementById('reference-photo-input').click()" style="margin-bottom: 0.5rem;">
-                                        Upload Photo
-                                    </button>
-                                    <button class="btn btn-outline" onclick="clearReferencePhoto()" style="margin-bottom: 0.5rem; margin-left: 0.5rem;">
-                                        Clear
-                                    </button>
-                                    <small style="display: block; color: var(--gray-500); font-size: 0.75rem;">
-                                        Best results: Clear headshot, good lighting, front-facing. JPG or PNG.
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Additional Description (optional)</label>
-                            <textarea id="setting-character-description" rows="2" placeholder="Any additional details about your appearance or style preferences..."></textarea>
-                            <small style="color: var(--gray-500); font-size: 0.75rem;">Add details the AI should know (e.g., "always include my gold watch")</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Cartoon Style</label>
-                            <select id="setting-cartoon-style">
-                                <option value="chaos">Calm in the Chaos - You composed, chaotic real estate scene behind</option>
-                                <option value="friendly">Warm & Friendly - Vintage paper background with whimsical icons</option>
-                                <option value="editorial">Editorial - Clean, professional magazine illustration</option>
-                                <option value="dynamic">Dynamic - Action-style with dramatic angles and energy</option>
-                            </select>
                         </div>
 
                         <div class="form-group">

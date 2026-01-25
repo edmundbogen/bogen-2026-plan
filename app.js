@@ -2876,104 +2876,66 @@ Write only the post content, nothing else.`;
             generatedContent = generatedContent.substring(0, charLimit - 3) + '...';
         }
 
-        // Step 3: Generate image if requested (using Replicate InstantID)
+        // Step 3: Generate branded scene image (Edmund Bogen signature style)
         let imageUrl = null;
         if (generateImage) {
-            updateAIProgress('Creating your cartoon image...', 70);
+            updateAIProgress('Creating branded illustration...', 70);
 
-            const referencePhoto = getReferencePhoto();
-            const replicateKey = settings.replicateKey;
+            // The Edmund Bogen signature style - based on the reference image
+            const styleBase = `Photo-realistic editorial cartoon illustration in magazine cover style. Rich saturated colors, warm lighting, blue sky with white clouds, suburban South Florida backdrop with palm trees and upscale homes.
 
-            if (!referencePhoto) {
-                window.lastImageError = 'Please upload a reference photo in Settings first.';
-            } else if (!replicateKey) {
-                window.lastImageError = 'Please add your Replicate API key in Settings to generate images that look like you.';
-            } else {
-                const stylePrompts = {
-                    'chaos': `A professional editorial magazine cover illustration of this person, calm and composed in the center, with a chaotic busy scene behind them showing stressed people yelling into phones, waving papers, real estate For Sale signs, Open House signs. Rich saturated colors, detailed cartoon style. Topic: ${prompt}`,
-                    'friendly': `A warm friendly cartoon illustration of this person on a textured vintage paper background with sepia tones. Whimsical hand-drawn icons floating in background (gears, lightbulbs, clipboards). Soft approachable editorial style. Topic: ${prompt}`,
-                    'editorial': `A clean modern editorial illustration of this person in professional magazine quality. Bold confident pose, sophisticated navy and gold color palette. Topic: ${prompt}`,
-                    'dynamic': `A dynamic action-style cartoon illustration of this person with dramatic angles, motion lines, energetic composition. Bold vibrant colors. Topic: ${prompt}`
-                };
+DO NOT include any central figure or person in the foreground. Leave the center area open.
 
-                const imagePrompt = stylePrompts[settings.cartoonStyle] || stylePrompts['chaos'];
+The scene should show a CHAOTIC real estate environment with these elements scattered around the edges and background:
+- Multiple cartoon people with exaggerated stressed expressions yelling into cell phones
+- People frantically waving papers and documents
+- Real estate "For Sale" signs and "Open House" signs
+- People clutching money and contracts
+- Luxury cars in the background
+- Upscale suburban houses
+- Papers flying through the air
+- General sense of frantic real estate activity
 
-                try {
-                    // Extract base64 data from data URL
-                    const base64Data = referencePhoto.split(',')[1];
+Color palette: Navy blue (#1e3a5f), gold (#c9a962), warm skin tones, blue sky, green foliage, white clouds.
 
-                    // Create prediction using Replicate's InstantID model
-                    updateAIProgress('Sending to Replicate...', 75);
+Style: High-quality editorial cartoon like a magazine cover. NOT a photograph. Detailed stylized faces with exaggerated expressions. Professional illustration quality.`;
 
-                    const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${replicateKey}`
-                        },
-                        body: JSON.stringify({
-                            version: 'c457e1a884062ab95f058466534acd45e2ea98c5d9be6b0a9d84e71c63e28187',
-                            input: {
-                                image: referencePhoto,
-                                prompt: imagePrompt + '. High quality cartoon illustration style, NOT a photograph, maintain exact facial likeness and features including glasses.',
-                                negative_prompt: 'photograph, realistic, blurry, low quality, distorted face, wrong glasses, missing glasses',
-                                style_name: 'Watercolor',
-                                num_steps: 30,
-                                guidance_scale: 5,
-                                ip_adapter_scale: 0.8,
-                                controlnet_conditioning_scale: 0.8
-                            }
-                        })
-                    });
+            const topicContext = `
+The specific topic/news for this image: ${prompt}
 
-                    if (!createResponse.ok) {
-                        const error = await createResponse.json();
-                        throw new Error(error.detail || 'Failed to start image generation');
-                    }
+Incorporate visual elements related to this topic into the chaotic scene.`;
 
-                    const prediction = await createResponse.json();
-                    let predictionId = prediction.id;
+            try {
+                updateAIProgress('Generating with DALL-E...', 80);
 
-                    // Poll for completion
-                    updateAIProgress('Generating your likeness...', 80);
-                    let attempts = 0;
-                    const maxAttempts = 60; // 60 seconds max
+                const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings.openaiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'dall-e-3',
+                        prompt: styleBase + topicContext,
+                        n: 1,
+                        size: '1024x1024',
+                        quality: 'hd',
+                        style: 'vivid'
+                    })
+                });
 
-                    while (attempts < maxAttempts) {
-                        const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
-                            headers: {
-                                'Authorization': `Bearer ${replicateKey}`
-                            }
-                        });
-
-                        const status = await statusResponse.json();
-
-                        if (status.status === 'succeeded') {
-                            imageUrl = status.output?.[0] || status.output;
-                            break;
-                        } else if (status.status === 'failed') {
-                            throw new Error(status.error || 'Image generation failed');
-                        } else if (status.status === 'canceled') {
-                            throw new Error('Image generation was canceled');
-                        }
-
-                        // Update progress
-                        const progress = 80 + Math.min(attempts, 15);
-                        updateAIProgress('Generating your likeness...', progress);
-
-                        // Wait 1 second before polling again
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        attempts++;
-                    }
-
-                    if (!imageUrl && attempts >= maxAttempts) {
-                        throw new Error('Image generation timed out');
-                    }
-
-                } catch (imgErr) {
-                    console.error('Replicate image generation failed:', imgErr);
-                    window.lastImageError = imgErr.message;
+                if (dalleResponse.ok) {
+                    const dalleData = await dalleResponse.json();
+                    imageUrl = dalleData.data[0].url;
+                } else {
+                    const dalleError = await dalleResponse.json();
+                    console.error('DALL-E error:', dalleError);
+                    window.lastImageError = dalleError.error?.message || 'Image generation failed';
                 }
+
+            } catch (imgErr) {
+                console.error('Image generation failed:', imgErr);
+                window.lastImageError = imgErr.message;
             }
         }
 
