@@ -2893,20 +2893,43 @@ Write ONLY the post. No explanations, no quotation marks around it.`;
             if (!replicateKey) {
                 window.lastImageError = 'Please add your Replicate API key in Settings to generate images.';
             } else {
-                // Edmund Bogen signature photo style
-                const stylePrompt = `Photo-realistic, high-end lifestyle photography. South Florida luxury real estate aesthetic.
+                // First, ask GPT to create a specific image description based on the content
+                const imageDescriptionResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings.openaiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o',
+                        messages: [{
+                            role: 'user',
+                            content: `You are creating an image prompt for a social media post about: "${prompt}"
 
-Subject: Beautiful, elegant woman (or women) in upscale setting. Mid-shot to close-up framing.
+The generated post content is: "${generatedContent}"
 
-Setting: Bright, colorful, sun-drenched Florida atmosphere. Could include: luxury waterfront property, palm trees, crystal blue water, upscale interior, golf course, yacht, poolside, modern architecture.
+Create a SPECIFIC, DETAILED image description that DIRECTLY illustrates this topic. The image should:
+1. Show exactly what the post is discussing (if it's about interest rates, show something related to mortgages/money/homes; if it's about a specific neighborhood, show that type of property)
+2. Be set in South Florida luxury real estate context (palm trees, waterfront, upscale homes, sunshine)
+3. Use professional editorial photography style - like WSJ or Architectural Digest
+4. NO generic "beautiful women posing" - the subject should be the TOPIC itself
 
-Mood: Aspirational, warm, inviting, successful lifestyle. Golden hour lighting preferred.
+Output ONLY the image description, nothing else. Be specific and visual. 2-3 sentences max.`
+                        }],
+                        max_tokens: 200,
+                        temperature: 0.7
+                    })
+                });
 
-Style: Professional real estate/lifestyle photography. Vibrant colors, sharp focus, magazine-quality.
+                let topicDescription = prompt;
+                if (imageDescriptionResponse.ok) {
+                    const descData = await imageDescriptionResponse.json();
+                    topicDescription = descData.choices[0].message.content.trim();
+                }
 
-THE IMAGE MUST RELATE TO THIS TOPIC: ${prompt}
+                const stylePrompt = `${topicDescription}
 
-Incorporate visual elements that connect to the topic while maintaining the luxury Florida lifestyle aesthetic.`;
+Style: Professional editorial photography. Sharp focus, vibrant natural colors, golden hour South Florida lighting. Magazine-quality composition. Photorealistic, NOT illustrated or AI-looking. Like a real photo from Architectural Digest or Robb Report.`;
 
                 try {
                     updateAIProgress('Generating with Flux...', 75);
