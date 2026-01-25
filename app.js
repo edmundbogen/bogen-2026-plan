@@ -3547,10 +3547,15 @@ function renderEmailCampaigns() {
                     <span style="font-size: 0.8125rem; color: var(--gray-500);">${date}</span>
                 </div>
                 <div class="email-campaign-body">
-                    <div class="email-campaign-subject" onclick="previewEmail('${email.id}')">${escapeHtml(email.subject)}</div>
-                    <div class="email-campaign-meta">
-                        ${email.audience ? `<span>📧 ${escapeHtml(email.audience)}</span>` : ''}
-                        ${email.notes ? `<span>📝 ${escapeHtml(email.notes.substring(0, 50))}${email.notes.length > 50 ? '...' : ''}</span>` : ''}
+                    <div class="email-thumbnail" onclick="previewEmail('${email.id}')" data-email-id="${email.id}">
+                        ${email.htmlContent ? `<iframe data-email-thumb="${email.id}"></iframe>` : '<div class="email-thumbnail-placeholder">No preview</div>'}
+                    </div>
+                    <div class="email-campaign-info">
+                        <div class="email-campaign-subject" onclick="previewEmail('${email.id}')">${escapeHtml(email.subject)}</div>
+                        <div class="email-campaign-meta">
+                            ${email.audience ? `<span>📧 ${escapeHtml(email.audience)}</span>` : ''}
+                            ${email.notes ? `<span>📝 ${escapeHtml(email.notes.substring(0, 50))}${email.notes.length > 50 ? '...' : ''}</span>` : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="email-campaign-actions">
@@ -3562,6 +3567,23 @@ function renderEmailCampaigns() {
             </div>
         `;
     }).join('');
+
+    // Populate thumbnail iframes after DOM update
+    setTimeout(() => populateEmailThumbnails(), 50);
+}
+
+function populateEmailThumbnails() {
+    const emails = appData.emailCampaigns || [];
+    emails.forEach(email => {
+        if (!email.htmlContent) return;
+        const iframe = document.querySelector(`iframe[data-email-thumb="${email.id}"]`);
+        if (iframe) {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(email.htmlContent);
+            doc.close();
+        }
+    });
 }
 
 function updateEmailStats() {
