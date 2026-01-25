@@ -274,7 +274,8 @@ let appData = {
         }
     },
     weeklyChecklist: {},
-    socialPosts: []
+    socialPosts: [],
+    emailCampaigns: []
 };
 
 // ===========================================
@@ -2731,6 +2732,9 @@ function saveSocialPost() {
     const topic = document.getElementById('social-topic').value;
     const content = document.getElementById('social-content').value;
     const status = document.getElementById('social-status').value;
+    const scheduledDate = document.getElementById('social-scheduled-date').value;
+    const scheduledTime = document.getElementById('social-scheduled-time').value;
+    const mediaUrl = document.getElementById('social-media-url').value;
 
     if (!platform || !topic || !content) {
         alert('Please fill in all required fields');
@@ -2745,6 +2749,9 @@ function saveSocialPost() {
             post.topic = topic;
             post.content = content;
             post.status = status;
+            post.scheduledDate = scheduledDate;
+            post.scheduledTime = scheduledTime;
+            post.mediaUrl = mediaUrl;
             post.updatedAt = new Date().toISOString();
         }
     } else {
@@ -2755,6 +2762,9 @@ function saveSocialPost() {
             topic,
             content,
             status,
+            scheduledDate,
+            scheduledTime,
+            mediaUrl,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -2774,6 +2784,9 @@ function resetSocialForm() {
     document.getElementById('social-topic').value = '';
     document.getElementById('social-content').value = '';
     document.getElementById('social-status').value = 'draft';
+    document.getElementById('social-scheduled-date').value = '';
+    document.getElementById('social-scheduled-time').value = '';
+    document.getElementById('social-media-url').value = '';
     document.getElementById('char-count').textContent = '0';
     document.getElementById('platform-limit').textContent = 'Select a platform to see limit';
 
@@ -2791,6 +2804,9 @@ function editSocialPost(id) {
     document.getElementById('social-post-id').value = post.id;
     document.getElementById('social-content').value = post.content;
     document.getElementById('social-status').value = post.status;
+    document.getElementById('social-scheduled-date').value = post.scheduledDate || '';
+    document.getElementById('social-scheduled-time').value = post.scheduledTime || '';
+    document.getElementById('social-media-url').value = post.mediaUrl || '';
 
     selectPlatform(post.platform);
     selectTopic(post.topic);
@@ -2807,6 +2823,28 @@ function deleteSocialPost(id) {
     saveData();
     renderSocialPosts();
     updateSocialStats();
+}
+
+function copySocialPost(id) {
+    const post = appData.socialPosts.find(p => p.id === id);
+    if (!post) return;
+
+    navigator.clipboard.writeText(post.content).then(() => {
+        // Show brief success feedback
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✓ Copied!';
+        btn.style.background = 'var(--success)';
+        btn.style.color = 'white';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = '';
+            btn.style.color = '';
+        }, 1500);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+    });
 }
 
 function updatePostStatus(id, newStatus) {
@@ -2879,6 +2917,16 @@ function renderSocialPosts() {
             year: 'numeric'
         });
 
+        // Format scheduled date if exists
+        let scheduledInfo = '';
+        if (post.scheduledDate) {
+            const schedDate = new Date(post.scheduledDate + 'T' + (post.scheduledTime || '00:00'));
+            scheduledInfo = `<span style="color: var(--brand-primary);">📅 ${schedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}${post.scheduledTime ? ' @ ' + schedDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''}</span>`;
+        }
+
+        // Media URL link
+        const mediaLink = post.mediaUrl ? `<a href="${escapeHtml(post.mediaUrl)}" target="_blank" style="color: var(--brand-primary); text-decoration: none;">🖼️ Media</a>` : '';
+
         return `
             <div class="social-post-card">
                 <div class="social-post-header ${post.platform}">
@@ -2891,9 +2939,11 @@ function renderSocialPosts() {
                 <div class="social-post-body">
                     <span class="social-post-topic ${post.topic}">${topicLabels[post.topic] || post.topic}</span>
                     <div class="social-post-content">${escapeHtml(post.content)}</div>
+                    ${scheduledInfo || mediaLink ? `<div style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.8125rem;">${scheduledInfo}${mediaLink}</div>` : ''}
                     <div class="social-post-meta">
                         <span>${date}</span>
                         <div class="social-post-actions">
+                            <button onclick="copySocialPost('${post.id}')" title="Copy to clipboard">📋 Copy</button>
                             <button onclick="editSocialPost('${post.id}')">Edit</button>
                             ${statusButtons}
                             <button onclick="deleteSocialPost('${post.id}')">Delete</button>
@@ -2948,6 +2998,245 @@ function initSocialMediaFilters() {
     if (contentField) {
         contentField.addEventListener('input', updateCharCount);
     }
+}
+
+// ===========================================
+// EMAIL CAMPAIGNS
+// ===========================================
+
+let currentEmailSenderFilter = 'all';
+let currentPreviewEmailId = null;
+
+function renderEmailCampaigns() {
+    const container = document.getElementById('email-campaigns-container');
+    const emptyState = document.getElementById('email-empty-state');
+    const searchInput = document.getElementById('email-search');
+
+    if (!container) return;
+
+    let emails = appData.emailCampaigns || [];
+
+    // Apply sender filter
+    if (currentEmailSenderFilter !== 'all') {
+        emails = emails.filter(e => e.sender === currentEmailSenderFilter);
+    }
+
+    // Apply search
+    if (searchInput && searchInput.value) {
+        const term = searchInput.value.toLowerCase();
+        emails = emails.filter(e =>
+            (e.subject || '').toLowerCase().includes(term) ||
+            (e.htmlContent || '').toLowerCase().includes(term) ||
+            (e.audience || '').toLowerCase().includes(term)
+        );
+    }
+
+    // Sort by date (newest first)
+    emails.sort((a, b) => new Date(b.dateSent) - new Date(a.dateSent));
+
+    if (emails.length === 0) {
+        container.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    container.innerHTML = emails.map(email => {
+        const date = new Date(email.dateSent).toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        const senderNames = { edmund: 'Edmund', samantha: 'Samantha', dina: 'Dina' };
+
+        return `
+            <div class="email-campaign-card">
+                <div class="email-campaign-header">
+                    <span class="sender-badge ${email.sender}">${senderNames[email.sender] || email.sender}</span>
+                    <span style="font-size: 0.8125rem; color: var(--gray-500);">${date}</span>
+                </div>
+                <div class="email-campaign-body">
+                    <div class="email-campaign-subject" onclick="previewEmail('${email.id}')">${escapeHtml(email.subject)}</div>
+                    <div class="email-campaign-meta">
+                        ${email.audience ? `<span>📧 ${escapeHtml(email.audience)}</span>` : ''}
+                        ${email.notes ? `<span>📝 ${escapeHtml(email.notes.substring(0, 50))}${email.notes.length > 50 ? '...' : ''}</span>` : ''}
+                    </div>
+                </div>
+                <div class="email-campaign-actions">
+                    <button class="preview" onclick="previewEmail('${email.id}')">👁️ Preview</button>
+                    <button onclick="copyEmailHtmlById('${email.id}')">📋 Copy HTML</button>
+                    <button onclick="editEmailCampaign('${email.id}')">Edit</button>
+                    <button onclick="deleteEmailCampaign('${email.id}')">Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateEmailStats() {
+    const emails = appData.emailCampaigns || [];
+
+    const total = emails.length;
+    const edmund = emails.filter(e => e.sender === 'edmund').length;
+    const samantha = emails.filter(e => e.sender === 'samantha').length;
+    const dina = emails.filter(e => e.sender === 'dina').length;
+
+    const statTotal = document.getElementById('email-stat-total');
+    const statEdmund = document.getElementById('email-stat-edmund');
+    const statSamantha = document.getElementById('email-stat-samantha');
+    const statDina = document.getElementById('email-stat-dina');
+
+    if (statTotal) statTotal.textContent = total;
+    if (statEdmund) statEdmund.textContent = edmund;
+    if (statSamantha) statSamantha.textContent = samantha;
+    if (statDina) statDina.textContent = dina;
+}
+
+function saveEmailCampaign() {
+    const id = document.getElementById('email-campaign-id').value;
+    const sender = document.getElementById('email-sender').value;
+    const dateSent = document.getElementById('email-date-sent').value;
+    const subject = document.getElementById('email-subject').value;
+    const audience = document.getElementById('email-audience').value;
+    const htmlContent = document.getElementById('email-html-content').value;
+    const notes = document.getElementById('email-notes').value;
+
+    if (!sender || !dateSent || !subject) {
+        alert('Please fill in sender, date, and subject');
+        return;
+    }
+
+    if (id) {
+        // Edit existing
+        const email = appData.emailCampaigns.find(e => e.id === id);
+        if (email) {
+            email.sender = sender;
+            email.dateSent = dateSent;
+            email.subject = subject;
+            email.audience = audience;
+            email.htmlContent = htmlContent;
+            email.notes = notes;
+            email.updatedAt = new Date().toISOString();
+        }
+    } else {
+        // Create new
+        const email = {
+            id: Date.now().toString(),
+            sender,
+            dateSent,
+            subject,
+            audience,
+            htmlContent,
+            notes,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        appData.emailCampaigns.unshift(email);
+    }
+
+    saveData();
+    closeModal('email-campaign-modal');
+    renderEmailCampaigns();
+    updateEmailStats();
+    resetEmailForm();
+}
+
+function resetEmailForm() {
+    document.getElementById('email-campaign-id').value = '';
+    document.getElementById('email-sender').value = '';
+    document.getElementById('email-date-sent').value = '';
+    document.getElementById('email-subject').value = '';
+    document.getElementById('email-audience').value = '';
+    document.getElementById('email-html-content').value = '';
+    document.getElementById('email-notes').value = '';
+    document.getElementById('email-campaign-modal-title').textContent = 'Add Email Campaign';
+}
+
+function editEmailCampaign(id) {
+    const email = appData.emailCampaigns.find(e => e.id === id);
+    if (!email) return;
+
+    document.getElementById('email-campaign-id').value = email.id;
+    document.getElementById('email-sender').value = email.sender;
+    document.getElementById('email-date-sent').value = email.dateSent;
+    document.getElementById('email-subject').value = email.subject;
+    document.getElementById('email-audience').value = email.audience || '';
+    document.getElementById('email-html-content').value = email.htmlContent || '';
+    document.getElementById('email-notes').value = email.notes || '';
+
+    document.getElementById('email-campaign-modal-title').textContent = 'Edit Email Campaign';
+    openModal('email-campaign-modal');
+}
+
+function deleteEmailCampaign(id) {
+    if (!confirm('Are you sure you want to delete this email campaign?')) return;
+
+    appData.emailCampaigns = appData.emailCampaigns.filter(e => e.id !== id);
+    saveData();
+    renderEmailCampaigns();
+    updateEmailStats();
+}
+
+function previewEmail(id) {
+    const email = appData.emailCampaigns.find(e => e.id === id);
+    if (!email) return;
+
+    currentPreviewEmailId = id;
+
+    // Update modal title and meta
+    document.getElementById('email-preview-title').textContent = email.subject;
+    const senderNames = { edmund: 'Edmund', samantha: 'Samantha', dina: 'Dina' };
+    const date = new Date(email.dateSent).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    document.getElementById('email-preview-meta').textContent = `Sent by ${senderNames[email.sender] || email.sender} on ${date}${email.audience ? ' to ' + email.audience : ''}`;
+
+    // Load HTML into iframe
+    const iframe = document.getElementById('email-preview-frame');
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(email.htmlContent || '<p style="color: #999; text-align: center; padding: 2rem;">No HTML content available</p>');
+    doc.close();
+
+    openModal('email-preview-modal');
+}
+
+function copyEmailHtml() {
+    if (!currentPreviewEmailId) return;
+    copyEmailHtmlById(currentPreviewEmailId);
+}
+
+function copyEmailHtmlById(id) {
+    const email = appData.emailCampaigns.find(e => e.id === id);
+    if (!email || !email.htmlContent) {
+        alert('No HTML content to copy');
+        return;
+    }
+
+    navigator.clipboard.writeText(email.htmlContent).then(() => {
+        alert('HTML copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+    });
+}
+
+function editCurrentEmail() {
+    if (!currentPreviewEmailId) return;
+    closeModal('email-preview-modal');
+    editEmailCampaign(currentPreviewEmailId);
+}
+
+function initEmailFilters() {
+    document.querySelectorAll('.social-filter-btn[data-email-sender]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.social-filter-btn[data-email-sender]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentEmailSenderFilter = btn.dataset.emailSender;
+            renderEmailCampaigns();
+        });
+    });
 }
 
 // ===========================================
@@ -3154,7 +3443,8 @@ function restoreBackup(event) {
                 activities: backup.data.activities || [],
                 leadSources: backup.data.leadSources || [],
                 leadSourceTouches: backup.data.leadSourceTouches || [],
-                socialPosts: backup.data.socialPosts || []
+                socialPosts: backup.data.socialPosts || [],
+                emailCampaigns: backup.data.emailCampaigns || []
             };
 
             saveData();
@@ -3163,6 +3453,8 @@ function restoreBackup(event) {
             renderLeadSources();
             renderContacts();
             renderSocialPosts();
+            renderEmailCampaigns();
+            updateEmailStats();
 
             alert('Backup restored successfully!');
         } catch (err) {
@@ -3179,9 +3471,12 @@ function restoreBackup(event) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeMobileNavigation();
     initSocialMediaFilters();
+    initEmailFilters();
     initContactsTab();
     renderSocialPosts();
     updateSocialStats();
+    renderEmailCampaigns();
+    updateEmailStats();
     renderContacts();
     updateContactStats();
 });

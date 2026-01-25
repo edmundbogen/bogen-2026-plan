@@ -1850,6 +1850,97 @@
             color: var(--brand-primary);
         }
 
+        /* Email Campaign Styles */
+        .email-campaign-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .email-campaign-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .email-campaign-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .email-campaign-header .sender-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .sender-badge.edmund { background: #DBEAFE; color: #1E40AF; }
+        .sender-badge.samantha { background: #FCE7F3; color: #BE185D; }
+        .sender-badge.dina { background: #D1FAE5; color: #047857; }
+
+        .email-campaign-body {
+            padding: 1.25rem;
+        }
+
+        .email-campaign-subject {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+
+        .email-campaign-subject:hover {
+            color: var(--brand-primary);
+        }
+
+        .email-campaign-meta {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .email-campaign-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .email-campaign-actions button {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .email-campaign-actions button:hover {
+            background: var(--gray-100);
+        }
+
+        .email-campaign-actions button.preview {
+            background: var(--brand-primary);
+            color: white;
+            border-color: var(--brand-primary);
+        }
+
+        .email-campaign-actions button.preview:hover {
+            background: var(--brand-primary-dark);
+        }
+
         @media (max-width: 768px) {
             .social-posts-grid {
                 grid-template-columns: 1fr;
@@ -1948,6 +2039,7 @@
                 <button class="mobile-nav-item" data-page="quarter-plan">Quarter Plan</button>
                 <button class="mobile-nav-item" data-page="team-goals">Team Goals</button>
                 <button class="mobile-nav-item" data-page="social-media">Social Media</button>
+                <button class="mobile-nav-item" data-page="email-campaigns">Email Campaigns</button>
                 <button class="mobile-nav-item" data-page="ops" id="mobile-nav-ops">Ops Execution</button>
                 <button class="mobile-nav-item" data-page="settings" id="mobile-nav-settings">Settings</button>
             </div>
@@ -1967,6 +2059,7 @@
                 <button class="nav-item" data-page="quarter-plan" role="tab" aria-selected="false" aria-controls="page-quarter-plan">Quarter Plan</button>
                 <button class="nav-item" data-page="team-goals" role="tab" aria-selected="false" aria-controls="page-team-goals">Team Goals</button>
                 <button class="nav-item" data-page="social-media" role="tab" aria-selected="false" aria-controls="page-social-media">Social Media</button>
+                <button class="nav-item" data-page="email-campaigns" role="tab" aria-selected="false" aria-controls="page-email-campaigns">Email Campaigns</button>
                 <button class="nav-item" data-page="ops" id="nav-ops" role="tab" aria-selected="false" aria-controls="page-ops">Ops Execution</button>
                 <button class="nav-item" data-page="settings" id="nav-settings" role="tab" aria-selected="false" aria-controls="page-settings">Settings</button>
             </div>
@@ -2685,6 +2778,64 @@
                 </div>
             </section>
 
+            <!-- Email Campaigns Page -->
+            <section class="page-content" id="page-email-campaigns" role="tabpanel" aria-labelledby="email-campaigns-heading">
+                <div class="page-header">
+                    <h1 id="email-campaigns-heading">Email Campaigns</h1>
+                    <p>Repository of sent email campaigns for reference and reuse</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="social-stats">
+                    <div class="social-stat-card" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);">
+                        <div class="social-stat-number" id="email-stat-total">0</div>
+                        <div class="social-stat-label">Total Emails</div>
+                    </div>
+                    <div class="social-stat-card" style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);">
+                        <div class="social-stat-number" id="email-stat-edmund">0</div>
+                        <div class="social-stat-label">Edmund's</div>
+                    </div>
+                    <div class="social-stat-card" style="background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%);">
+                        <div class="social-stat-number" id="email-stat-samantha">0</div>
+                        <div class="social-stat-label">Samantha's</div>
+                    </div>
+                    <div class="social-stat-card" style="background: linear-gradient(135deg, #10B981 0%, #047857 100%);">
+                        <div class="social-stat-number" id="email-stat-dina">0</div>
+                        <div class="social-stat-label">Dina's</div>
+                    </div>
+                </div>
+
+                <!-- Filters and Actions -->
+                <div class="social-media-header">
+                    <div class="social-filters">
+                        <button class="social-filter-btn active" data-email-sender="all">All Senders</button>
+                        <button class="social-filter-btn" data-email-sender="edmund" style="--filter-color: #3B82F6;">Edmund</button>
+                        <button class="social-filter-btn" data-email-sender="samantha" style="--filter-color: #EC4899;">Samantha</button>
+                        <button class="social-filter-btn" data-email-sender="dina" style="--filter-color: #10B981;">Dina</button>
+                    </div>
+                    <button class="add-post-btn" onclick="openModal('email-campaign-modal')">+ Add Email</button>
+                </div>
+
+                <!-- Search -->
+                <div style="margin-bottom: 1.5rem;">
+                    <input type="text" id="email-search" placeholder="Search emails by subject or content..."
+                           style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 0.9375rem;"
+                           oninput="renderEmailCampaigns()">
+                </div>
+
+                <!-- Email List -->
+                <div id="email-campaigns-container">
+                    <!-- Emails will be rendered here by JavaScript -->
+                </div>
+
+                <!-- Empty State -->
+                <div class="social-empty-state" id="email-empty-state" style="display: none;">
+                    <h3>No Email Campaigns Yet</h3>
+                    <p>Add your first email campaign to build your reference library</p>
+                    <button class="add-post-btn" onclick="openModal('email-campaign-modal')">+ Add Your First Email</button>
+                </div>
+            </section>
+
             <!-- Ops Execution Page -->
             <section class="page-content" id="page-ops" role="tabpanel" aria-labelledby="ops-heading">
                 <div class="page-header">
@@ -2988,6 +3139,22 @@
                         </small>
                     </div>
 
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Scheduled Date</label>
+                            <input type="date" id="social-scheduled-date" style="width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label>Scheduled Time</label>
+                            <input type="time" id="social-scheduled-time" style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Media URL <span style="font-weight: normal; color: var(--gray-500);">(Canva link, image URL, etc.)</span></label>
+                        <input type="url" id="social-media-url" placeholder="https://www.canva.com/design/..." style="width: 100%;">
+                    </div>
+
                     <div class="form-group">
                         <label>Status</label>
                         <select id="social-status">
@@ -3001,6 +3168,89 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('social-post-modal')">Cancel</button>
                 <button class="btn btn-primary" onclick="saveSocialPost()">Save Post</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Campaign Modal -->
+    <div class="modal-overlay" id="email-campaign-modal">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="email-campaign-modal-title">Add Email Campaign</h3>
+                <button class="modal-close" onclick="closeModal('email-campaign-modal')" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="email-campaign-form">
+                    <input type="hidden" id="email-campaign-id">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Sender</label>
+                            <select id="email-sender" required>
+                                <option value="">Select sender...</option>
+                                <option value="edmund">Edmund</option>
+                                <option value="samantha">Samantha</option>
+                                <option value="dina">Dina</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date Sent</label>
+                            <input type="date" id="email-date-sent" required style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subject Line</label>
+                        <input type="text" id="email-subject" required placeholder="Enter email subject...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Audience/List <span style="font-weight: normal; color: var(--gray-500);">(optional)</span></label>
+                        <input type="text" id="email-audience" placeholder="e.g., St Andrews Club Members, Past Clients, Sphere...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Content (HTML)</label>
+                        <textarea id="email-html-content" rows="12"
+                                  style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.8125rem; resize: vertical;"
+                                  placeholder="Paste your HTML email content here..."></textarea>
+                        <small style="color: var(--gray-500); font-size: 0.75rem;">
+                            Paste the full HTML of your email. You can get this from Constant Contact, Mailchimp, or your email builder.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes <span style="font-weight: normal; color: var(--gray-500);">(optional)</span></label>
+                        <textarea id="email-notes" rows="2"
+                                  style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-family: inherit; resize: vertical;"
+                                  placeholder="Any notes about this campaign..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('email-campaign-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEmailCampaign()">Save Email</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Preview Modal -->
+    <div class="modal-overlay" id="email-preview-modal">
+        <div class="modal" style="max-width: 900px; height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <div>
+                    <h3 id="email-preview-title">Email Preview</h3>
+                    <p id="email-preview-meta" style="margin: 0; font-size: 0.8125rem; color: var(--gray-500);"></p>
+                </div>
+                <button class="modal-close" onclick="closeModal('email-preview-modal')" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body" style="flex: 1; overflow: hidden; padding: 0;">
+                <iframe id="email-preview-frame" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+            <div class="modal-footer" style="flex-shrink: 0;">
+                <button class="btn btn-secondary" onclick="closeModal('email-preview-modal')">Close</button>
+                <button class="btn btn-outline" onclick="copyEmailHtml()">Copy HTML</button>
+                <button class="btn btn-primary" onclick="editCurrentEmail()">Edit</button>
             </div>
         </div>
     </div>
