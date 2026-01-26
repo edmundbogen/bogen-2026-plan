@@ -666,7 +666,7 @@ async function loadData() {
         console.error('Failed to load from localStorage:', err);
     }
 
-    // Then try to load from Supabase (if available)
+    // Then try to load from Supabase (if available) - CLOUD IS SOURCE OF TRUTH
     if (supabaseClient) {
         try {
             syncStatus = 'syncing';
@@ -674,7 +674,7 @@ async function loadData() {
 
             const { data, error } = await supabaseClient
                 .from('bogen_2026_data')
-                .select('data')
+                .select('data, updated_at')
                 .eq('user_id', 'bogen_team')
                 .single();
 
@@ -683,13 +683,17 @@ async function loadData() {
                 console.error('Supabase load error:', error);
                 syncStatus = 'error';
             } else if (data && data.data) {
-                // Merge cloud data with defaults
+                // Cloud data overwrites local - cloud is source of truth
                 appData = { ...appData, ...data.data };
                 appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
                 // Update localStorage with cloud data
                 localStorage.setItem('bogen2026Data', JSON.stringify(appData));
+                // Set lastLocalUpdate to cloud timestamp so auto-sync works correctly
+                if (typeof lastLocalUpdate !== 'undefined') {
+                    lastLocalUpdate = data.updated_at || new Date().toISOString();
+                }
                 syncStatus = 'online';
-                console.log('Data loaded from Supabase');
+                console.log('Data loaded from Supabase (cloud is source of truth)');
             } else {
                 // No data in cloud yet, we'll create it on first save
                 syncStatus = 'online';
@@ -739,7 +743,8 @@ async function saveData() {
 }
 
 // Track when we last updated locally (to detect cloud changes)
-let lastLocalUpdate = new Date().toISOString();
+// Initialize to old date so cloud data wins on first load
+let lastLocalUpdate = '2000-01-01T00:00:00.000Z';
 let autoSyncInterval = null;
 
 // Auto-refresh: Check Supabase for updates every 60 seconds
