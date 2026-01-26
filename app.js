@@ -93,7 +93,9 @@ const TAG_LABELS = {
     'past-client': 'Past Client',
     'investor': 'Investor',
     'sphere': 'Sphere',
-    'prospect': 'Prospect'
+    'prospect': 'Prospect',
+    'elliman-agent': 'Elliman Agent',
+    'st-andrews': 'St. Andrews'
 };
 
 const TAG_COLORS = {
@@ -103,7 +105,9 @@ const TAG_COLORS = {
     'past-client': { bg: '#F3E8FF', color: '#7C3AED' },
     'investor': { bg: '#FEF3C7', color: '#D97706' },
     'sphere': { bg: '#E0E7FF', color: '#4338CA' },
-    'prospect': { bg: '#F3F4F6', color: '#4B5563' }
+    'prospect': { bg: '#F3F4F6', color: '#4B5563' },
+    'elliman-agent': { bg: '#1a3e5c', color: '#FFFFFF' },
+    'st-andrews': { bg: '#1B5E20', color: '#FFFFFF' }
 };
 
 // Helper function to render tag badges
@@ -215,6 +219,8 @@ async function migrateLeadSourcesToContacts() {
 }
 
 const LEAD_SOURCE_TYPES = {
+    'elliman-agent': 'Elliman Agent',
+    'st-andrews': 'St. Andrews Member',
     'attorney': 'Attorney',
     'cpa': 'CPA/Accountant',
     'financial-advisor': 'Financial Advisor',
@@ -2159,8 +2165,16 @@ function renderLeadSources() {
             const closedDeals = appData.sellers.filter(c => c.leadSourceId === s.id && c.stage === 'closed' && !hasTag(c, 'lead-source')).length;
             const daysSinceTouch = s.lastTouchDate ? Math.floor((now - new Date(s.lastTouchDate)) / (1000 * 60 * 60 * 24)) : 999;
             const touchStatus = daysSinceTouch <= 14 ? 'success' : daysSinceTouch <= 30 ? 'warning' : 'danger';
-            // Use leadSourceType for the relationship type (with fallback to old 'type' field)
-            const sourceType = s.leadSourceType || s.type || 'other';
+            // Support multiple types (with fallback to old single type)
+            const sourceTypes = s.leadSourceTypes || (s.leadSourceType ? [s.leadSourceType] : (s.type ? [s.type] : ['other']));
+
+            // Render multiple badges
+            const typeBadges = sourceTypes.map(type => {
+                let badgeClass = 'badge-gray';
+                if (type === 'elliman-agent') badgeClass = 'badge-elliman';
+                else if (type === 'st-andrews') badgeClass = 'badge-st-andrews';
+                return `<span class="badge ${badgeClass}" style="margin-right: 0.25rem; margin-bottom: 0.25rem;">${LEAD_SOURCE_TYPES[type] || type}</span>`;
+            }).join('');
 
             return `
                 <tr>
@@ -2168,7 +2182,7 @@ function renderLeadSources() {
                         <strong>${s.name || 'Unknown'}</strong>
                         ${s.phone ? `<br><span style="font-size: 0.8125rem; color: var(--gray-500);">${s.phone}</span>` : ''}
                     </td>
-                    <td>${LEAD_SOURCE_TYPES[sourceType] || sourceType || '-'}</td>
+                    <td style="max-width: 200px;">${typeBadges || '-'}</td>
                     <td>${s.company || '-'}</td>
                     <td><strong>${leadsSent}</strong></td>
                     <td><span class="badge ${closedDeals > 0 ? 'badge-success' : 'badge-gray'}">${closedDeals}</span></td>
@@ -2242,6 +2256,8 @@ function openAddLeadSourceModal() {
     document.getElementById('lead-source-modal-title').textContent = 'Add Lead Source';
     document.getElementById('lead-source-form').reset();
     document.getElementById('lead-source-id').value = '';
+    // Clear all type checkboxes
+    setLeadSourceTypeCheckboxes([]);
     openModal('lead-source-modal');
 }
 
@@ -2253,8 +2269,9 @@ function editLeadSource(id) {
     document.getElementById('lead-source-modal-title').textContent = 'Edit Lead Source';
     document.getElementById('lead-source-id').value = source.id;
     document.getElementById('lead-source-name').value = source.name || '';
-    // Use leadSourceType field (with fallback to old type field for migration)
-    document.getElementById('lead-source-type').value = source.leadSourceType || source.type || 'other';
+    // Use leadSourceTypes array (with fallback to old single type for migration)
+    const types = source.leadSourceTypes || (source.leadSourceType ? [source.leadSourceType] : (source.type ? [source.type] : []));
+    setLeadSourceTypeCheckboxes(types);
     document.getElementById('lead-source-company').value = source.company || '';
     document.getElementById('lead-source-phone').value = source.phone || '';
     document.getElementById('lead-source-email').value = source.email || '';
@@ -2283,8 +2300,9 @@ function saveLeadSource() {
         spouseName: existingContact?.spouseName || '',
         spousePhone: existingContact?.spousePhone || '',
         spouseEmail: existingContact?.spouseEmail || '',
-        // Lead source specific fields
-        leadSourceType: document.getElementById('lead-source-type').value,
+        // Lead source specific fields - now supports multiple types
+        leadSourceTypes: getSelectedLeadSourceTypes(),
+        leadSourceType: getSelectedLeadSourceTypes()[0] || 'other', // Keep for backward compat
         company: document.getElementById('lead-source-company').value,
         // Property fields (preserve if exists, empty otherwise)
         address: existingContact?.address || '',
@@ -2361,6 +2379,31 @@ function saveLeadSourceTouch() {
     renderContacts();
 }
 
+// Helper to get selected lead source types from checkboxes
+function getSelectedLeadSourceTypes() {
+    const checkboxes = document.querySelectorAll('input[name="lead-source-types"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Helper to set lead source type checkboxes
+function setLeadSourceTypeCheckboxes(types) {
+    // Clear all checkboxes first
+    document.querySelectorAll('input[name="lead-source-types"]').forEach(cb => {
+        cb.checked = false;
+    });
+    // Check the ones in the types array
+    if (types && Array.isArray(types)) {
+        types.forEach(type => {
+            const cb = document.querySelector(`input[name="lead-source-types"][value="${type}"]`);
+            if (cb) cb.checked = true;
+        });
+    } else if (types && typeof types === 'string') {
+        // Handle old single-type format
+        const cb = document.querySelector(`input[name="lead-source-types"][value="${types}"]`);
+        if (cb) cb.checked = true;
+    }
+}
+
 function populateLeadSourceDropdown() {
     const dropdown = document.getElementById('seller-lead-source');
     if (!dropdown) return;
@@ -2371,8 +2414,10 @@ function populateLeadSourceDropdown() {
     // Keep the first "no referral" option and rebuild the rest
     dropdown.innerHTML = '<option value="">-- No referral / Direct --</option>' +
         sources.map(s => {
-            const sourceType = s.leadSourceType || s.type || 'other';
-            return `<option value="${s.id}">${s.name} (${LEAD_SOURCE_TYPES[sourceType] || sourceType})</option>`;
+            // Support multiple types
+            const sourceTypes = s.leadSourceTypes || (s.leadSourceType ? [s.leadSourceType] : (s.type ? [s.type] : ['other']));
+            const typeLabels = sourceTypes.map(t => LEAD_SOURCE_TYPES[t] || t).join(', ');
+            return `<option value="${s.id}">${s.name} (${typeLabels})</option>`;
         }).join('');
 }
 

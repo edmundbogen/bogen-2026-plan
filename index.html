@@ -574,6 +574,36 @@
         .badge-danger { background: var(--danger-light); color: var(--danger); }
         .badge-info { background: var(--info-light); color: var(--info); }
         .badge-gray { background: var(--gray-200); color: var(--gray-600); }
+        .badge-elliman { background: var(--navy); color: var(--white); }
+        .badge-st-andrews { background: #1B5E20; color: var(--white); }
+
+        /* Checkbox labels for multi-select */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--gray-100);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .checkbox-label:hover {
+            background: var(--gray-200);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--brand-primary);
+        }
+
+        .checkbox-label:has(input:checked) {
+            background: var(--brand-primary-light);
+            border: 1px solid var(--brand-primary);
+        }
 
         /* Client type badges */
         .badge-seller {
@@ -3513,6 +3543,14 @@
                                 <input type="checkbox" name="contact-tag" value="prospect" onchange="updateTagStyles();" style="accent-color: var(--brand-primary);">
                                 Prospect
                             </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: #1a3e5c; color: white; border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="elliman-agent" onchange="updateTagStyles();" style="accent-color: white;">
+                                Elliman Agent
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.35rem; padding: 0.5rem 0.75rem; background: #1B5E20; color: white; border-radius: 20px; cursor: pointer; font-size: 0.8125rem; border: 2px solid transparent; transition: all 0.2s;">
+                                <input type="checkbox" name="contact-tag" value="st-andrews" onchange="updateTagStyles();" style="accent-color: white;">
+                                St. Andrews
+                            </label>
                         </div>
                     </div>
 
@@ -3756,20 +3794,22 @@
                         <input type="text" id="lead-source-name" required placeholder="e.g., John Smith">
                     </div>
                     <div class="form-group">
-                        <label>Relationship Type</label>
-                        <select id="lead-source-type">
-                            <option value="attorney">Attorney</option>
-                            <option value="cpa">CPA/Accountant</option>
-                            <option value="financial-advisor">Financial Advisor</option>
-                            <option value="past-client">Past Client</option>
-                            <option value="builder">Builder/Developer</option>
-                            <option value="contractor">Contractor</option>
-                            <option value="mortgage">Mortgage Broker</option>
-                            <option value="title">Title Company</option>
-                            <option value="friend">Friend/Family</option>
-                            <option value="agent">Other Agent</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <label>Relationship Types (select all that apply)</label>
+                        <div id="lead-source-types-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="elliman-agent"> Elliman Agent</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="st-andrews"> St. Andrews Member</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="attorney"> Attorney</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="cpa"> CPA/Accountant</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="financial-advisor"> Financial Advisor</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="past-client"> Past Client</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="builder"> Builder/Developer</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="contractor"> Contractor</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="mortgage"> Mortgage Broker</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="title"> Title Company</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="friend"> Friend/Family</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="agent"> Other Agent</label>
+                            <label class="checkbox-label"><input type="checkbox" name="lead-source-types" value="other"> Other</label>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Company/Firm</label>
