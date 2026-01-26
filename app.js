@@ -705,6 +705,7 @@ async function loadData() {
 async function saveData() {
     // Always save to localStorage first (instant, offline-capable)
     localStorage.setItem('bogen2026Data', JSON.stringify(appData));
+    lastLocalUpdate = new Date().toISOString();
 
     // Then sync to Supabase
     if (supabaseClient) {
@@ -736,6 +737,149 @@ async function saveData() {
     }
     updateSyncStatusUI();
 }
+
+// Track when we last updated locally (to detect cloud changes)
+let lastLocalUpdate = new Date().toISOString();
+let autoSyncInterval = null;
+
+// Auto-refresh: Check Supabase for updates every 60 seconds
+async function checkForCloudUpdates() {
+    if (!supabaseClient) return;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('bogen_2026_data')
+            .select('data, updated_at')
+            .eq('user_id', 'bogen_team')
+            .single();
+
+        if (error) {
+            console.log('Auto-sync check failed:', error.message);
+            return;
+        }
+
+        if (data && data.updated_at) {
+            const cloudTime = new Date(data.updated_at).getTime();
+            const localTime = new Date(lastLocalUpdate).getTime();
+
+            // If cloud is newer by more than 5 seconds, pull the update
+            if (cloudTime > localTime + 5000) {
+                console.log('Cloud data is newer, updating local...');
+
+                // Merge cloud data
+                appData = { ...appData, ...data.data };
+                appData.settings = { ...DEFAULT_SETTINGS, ...appData.settings };
+
+                // Update localStorage
+                localStorage.setItem('bogen2026Data', JSON.stringify(appData));
+                lastLocalUpdate = data.updated_at;
+
+                // Re-render current page
+                refreshCurrentPage();
+
+                // Show notification
+                showSyncNotification('Data updated from another device');
+
+                syncStatus = 'online';
+                updateSyncStatusUI();
+            }
+        }
+    } catch (err) {
+        console.error('Auto-sync error:', err);
+    }
+}
+
+// Refresh the currently visible page
+function refreshCurrentPage() {
+    const activePage = document.querySelector('.page-content.active');
+    if (!activePage) return;
+
+    const pageId = activePage.id.replace('page-', '');
+
+    switch (pageId) {
+        case 'dashboard':
+            renderDashboard();
+            break;
+        case 'pipeline':
+            renderPipeline();
+            break;
+        case 'lead-sources':
+            renderLeadSources();
+            break;
+        case 'team-goals':
+            renderTeamGoals();
+            break;
+        case 'ops':
+            renderOpsPage();
+            break;
+        case 'quarter-plan':
+            initializeChecklist();
+            break;
+    }
+}
+
+// Show a brief notification when data syncs
+function showSyncNotification(message) {
+    // Remove existing notification if any
+    const existing = document.getElementById('sync-notification');
+    if (existing) existing.remove();
+
+    const notification = document.createElement('div');
+    notification.id = 'sync-notification';
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--navy);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        font-size: 0.875rem;
+    `;
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--brand-primary);">↻</span>
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(notification);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Start auto-sync (every 60 seconds)
+function startAutoSync() {
+    if (autoSyncInterval) clearInterval(autoSyncInterval);
+    autoSyncInterval = setInterval(checkForCloudUpdates, 60000);
+    console.log('Auto-sync started (checking every 60 seconds)');
+}
+
+// Stop auto-sync (e.g., when page is hidden)
+function stopAutoSync() {
+    if (autoSyncInterval) {
+        clearInterval(autoSyncInterval);
+        autoSyncInterval = null;
+    }
+}
+
+// Pause auto-sync when tab is hidden, resume when visible
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopAutoSync();
+    } else {
+        // Check immediately when tab becomes visible
+        checkForCloudUpdates();
+        startAutoSync();
+    }
+});
 
 function updateSyncStatusUI() {
     const indicator = document.getElementById('sync-status');
@@ -4048,6 +4192,7 @@ function restoreBackup(event) {
 // Call on DOMContentLoaded - add to existing init
 document.addEventListener('DOMContentLoaded', () => {
     initializeMobileNavigation();
+    startAutoSync(); // Start auto-sync to keep multiple devices in sync
     initSocialMediaFilters();
     initEmailFilters();
     initContactsTab();
